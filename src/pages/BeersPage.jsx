@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useRole } from '../lib/AuthContext'
-import { getBeers, createBeer, updateBeer, deleteBeer, getForms } from '../lib/supabase'
-import { Modal, Alert, ScoreDisplay, EmptyState, Spinner, BEER_TYPES, CATEGORIES, calcScore } from '../components/UI'
+import { getBeers, createBeer, updateBeer, deleteBeer } from '../lib/supabase'
+import { Modal, Alert, EmptyState, Spinner, BEER_TYPES, CATEGORIES } from '../components/UI'
 
+// ── Beer form modal ────────────────────────────────────────────
 function BeerModal({ beer, onSave, onClose }) {
   const { profile } = useAuth()
   const [form, setForm] = useState(beer ? {
@@ -94,12 +95,71 @@ function BeerModal({ beer, onSave, onClose }) {
   )
 }
 
+// ── Beer card (mobile) ─────────────────────────────────────────
+function BeerCard({ beer, canEdit, canDelete, onEdit, onDelete }) {
+  return (
+    <div className="beer-card">
+      <div className="beer-card-header">
+        <div className="beer-card-title">
+          <strong>{beer.naam}</strong>
+          <span className="beer-card-brewery">{beer.brouwerij}</span>
+        </div>
+        <div className="flex-gap">
+          <span className="badge badge-hop">Cat. {beer.categorie}</span>
+        </div>
+      </div>
+
+      <div className="beer-card-type">
+        <span className="badge badge-muted">{beer.biertype}</span>
+      </div>
+
+      <div className="beer-card-stats">
+        <div className="beer-stat">
+          <span className="beer-stat-label">ABV</span>
+          <span className="beer-stat-value">{beer.abv}%</span>
+        </div>
+        <div className="beer-stat">
+          <span className="beer-stat-label">EBC</span>
+          <span className="beer-stat-value">{beer.ebc}</span>
+        </div>
+        <div className="beer-stat">
+          <span className="beer-stat-label">IBU</span>
+          <span className="beer-stat-value">{beer.ibu}</span>
+        </div>
+      </div>
+
+      {(beer.untappd_url || beer.brewfather_url) && (
+        <div className="flex-gap" style={{ marginTop: 8 }}>
+          {beer.untappd_url && (
+            <a href={beer.untappd_url} target="_blank" rel="noreferrer" className="beer-link">
+              Untappd ↗
+            </a>
+          )}
+          {beer.brewfather_url && (
+            <a href={beer.brewfather_url} target="_blank" rel="noreferrer" className="beer-link brewfather">
+              Brewfather ↗
+            </a>
+          )}
+        </div>
+      )}
+
+      {(canEdit || canDelete) && (
+        <div className="beer-card-actions">
+          {canEdit  && <button className="btn btn-ghost btn-sm" onClick={onEdit}>✏️ Bewerken</button>}
+          {canDelete && <button className="btn btn-danger btn-sm" onClick={onDelete}>🗑 Verwijderen</button>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main page ──────────────────────────────────────────────────
 export default function BeersPage() {
   const { profile } = useAuth()
   const { isSuperuser } = useRole()
   const [beers, setBeers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   const [modal, setModal] = useState(null)
   const [filterQ, setFilterQ] = useState('')
   const [filterCat, setFilterCat] = useState('')
@@ -112,16 +172,14 @@ export default function BeersPage() {
     } catch (err) {
       console.error('Fout bij ophalen bieren:', err)
       setError('Kon bieren niet laden: ' + err.message)
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   useEffect(() => { load() }, [])
 
-  const canAdd = ['superuser', 'admin', 'brouwer'].includes(profile?.role)
-  const canEdit = (beer) => isSuperuser || beer.owner_id === profile?.id
-  const canDelete = (beer) => isSuperuser
+  const canAdd    = ['superuser', 'admin', 'brouwer'].includes(profile?.role)
+  const canEdit   = (b) => isSuperuser || b.owner_id === profile?.id
+  const canDelete = (b) => isSuperuser
 
   async function handleSave(form) {
     if (modal.beer) {
@@ -147,7 +205,13 @@ export default function BeersPage() {
   })
 
   if (loading) return <Spinner />
-  if (error) return <div className="alert alert-error" style={{margin:20}}>{error}<br/><button className="btn btn-ghost btn-sm" style={{marginTop:8}} onClick={load}>Opnieuw proberen</button></div>
+  if (error) return (
+    <div className="alert alert-error" style={{ margin: 20 }}>
+      {error}
+      <br />
+      <button className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={load}>Opnieuw proberen</button>
+    </div>
+  )
 
   return (
     <div>
@@ -156,60 +220,63 @@ export default function BeersPage() {
           <h2>🍺 Bieren</h2>
           <p>{beers.length} bier{beers.length !== 1 ? 'en' : ''} in de database</p>
         </div>
-        {canAdd && <button className="btn btn-primary" onClick={() => setModal({ beer: null })}>+ Bier toevoegen</button>}
+        {canAdd && (
+          <button className="btn btn-primary" onClick={() => setModal({ beer: null })}>
+            + Bier toevoegen
+          </button>
+        )}
       </div>
 
       <div className="filter-bar">
-        <input className="form-input" style={{ maxWidth: 260 }} placeholder="Zoek op naam, type, brouwerij..."
+        <input className="form-input" style={{ maxWidth: 260, flex: 1 }}
+          placeholder="Zoek op naam, type, brouwerij..."
           value={filterQ} onChange={e => setFilterQ(e.target.value)} />
-        <select className="form-select" style={{ maxWidth: 130 }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
+        <select className="form-select" style={{ maxWidth: 160 }}
+          value={filterCat} onChange={e => setFilterCat(e.target.value)}>
           <option value="">Alle categorieën</option>
-          {CATEGORIES.map(c => <option key={c}>Categorie {c}</option>)}
+          {CATEGORIES.map(c => <option key={c} value={c}>Categorie {c}</option>)}
         </select>
       </div>
 
-      {filtered.length === 0
-        ? <EmptyState icon="🍶" message="Geen bieren gevonden." />
-        : (
-          <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      {filtered.length === 0 ? (
+        <EmptyState icon="🍶" message="Geen bieren gevonden." />
+      ) : (
+        <>
+          {/* ── Desktop tabel ── */}
+          <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
             <table className="table">
               <thead>
                 <tr>
                   <th>Naam</th>
-                  <th className="hide-mobile">Brouwerij</th>
+                  <th>Brouwerij</th>
                   <th>Type</th>
                   <th>Cat.</th>
-                  <th className="hide-mobile">ABV</th>
-                  <th className="hide-mobile">EBC</th>
-                  <th className="hide-mobile">IBU</th>
-                  <th className="hide-mobile">Links</th>
+                  <th>ABV</th>
+                  <th>EBC</th>
+                  <th>IBU</th>
+                  <th>Links</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(b => (
                   <tr key={b.id}>
-                    <td>
-                      <strong>{b.naam}</strong>
-                      <div className="text-muted" style={{ fontSize: '0.75rem', marginTop: 2 }}>
-                        {b.brouwerij} · {b.abv}%
-                      </div>
-                    </td>
-                    <td className="hide-mobile">{b.brouwerij}</td>
+                    <td><strong>{b.naam}</strong></td>
+                    <td>{b.brouwerij}</td>
                     <td><span className="badge badge-muted">{b.biertype}</span></td>
-                    <td><span className="badge badge-amber">{b.categorie}</span></td>
-                    <td className="hide-mobile">{b.abv}%</td>
-                    <td className="hide-mobile">{b.ebc}</td>
-                    <td className="hide-mobile">{b.ibu}</td>
-                    <td className="hide-mobile">
+                    <td><span className="badge badge-hop">Cat. {b.categorie}</span></td>
+                    <td>{b.abv}%</td>
+                    <td>{b.ebc}</td>
+                    <td>{b.ibu}</td>
+                    <td>
                       <div className="flex-gap">
-                        {b.untappd_url && <a href={b.untappd_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.75rem', color: 'var(--amber-dark)' }}>Untappd ↗</a>}
-                        {b.brewfather_url && <a href={b.brewfather_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.75rem', color: 'var(--hop)' }}>Brewfather ↗</a>}
+                        {b.untappd_url    && <a href={b.untappd_url}    target="_blank" rel="noreferrer" className="beer-link">Untappd ↗</a>}
+                        {b.brewfather_url && <a href={b.brewfather_url} target="_blank" rel="noreferrer" className="beer-link brewfather">Brewfather ↗</a>}
                       </div>
                     </td>
                     <td>
                       <div className="flex-gap">
-                        {canEdit(b) && <button className="btn btn-ghost btn-sm" onClick={() => setModal({ beer: b })}>✏️</button>}
+                        {canEdit(b)   && <button className="btn btn-ghost btn-sm"  onClick={() => setModal({ beer: b })}>✏️</button>}
                         {canDelete(b) && <button className="btn btn-danger btn-sm" onClick={() => handleDelete(b.id)}>🗑</button>}
                       </div>
                     </td>
@@ -218,7 +285,22 @@ export default function BeersPage() {
               </tbody>
             </table>
           </div>
-        )}
+
+          {/* ── Mobiele kaarten ── */}
+          <div className="mobile-only beer-card-list">
+            {filtered.map(b => (
+              <BeerCard
+                key={b.id}
+                beer={b}
+                canEdit={canEdit(b)}
+                canDelete={canDelete(b)}
+                onEdit={() => setModal({ beer: b })}
+                onDelete={() => handleDelete(b.id)}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {modal && <BeerModal beer={modal.beer} onSave={handleSave} onClose={() => setModal(null)} />}
     </div>

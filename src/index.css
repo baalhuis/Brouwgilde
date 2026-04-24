@@ -889,3 +889,247 @@ h1, h2, h3, h4 {
   white-space: normal;
   overflow: visible;
 }
+
+/* ═══════════════════════════════════════════════════
+   DESKTOP / MOBILE VISIBILITY HELPERS
+   ═══════════════════════════════════════════════════ */
+
+.desktop-only { display: block; }
+.mobile-only  { display: none;  }
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only  { display: block !important; }
+}
+
+/* ═══════════════════════════════════════════════════
+   BEER CARDS (mobiele weergave bierenlijst)
+   ═══════════════════════════════════════════════════ */
+
+.beer-card-list { display: flex; flex-direction: column; gap: 10px; }
+
+.beer-card {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.beer-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.beer-card-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.beer-card-title strong {
+  font-size: 1rem;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.beer-card-brewery {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.beer-card-type { margin-bottom: 10px; }
+
+.beer-card-stats {
+  display: flex;
+  gap: 0;
+  background: var(--surface);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: 1px solid var(--border-light);
+}
+
+.beer-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  border-right: 1px solid var(--border-light);
+}
+
+.beer-stat:last-child { border-right: none; }
+
+.beer-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.beer-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: 'Fraunces', serif;
+  margin-top: 2px;
+}
+
+.beer-link {
+  font-size: 0.78rem;
+  color: var(--green-dark);
+  text-decoration: none;
+  padding: 3px 8px;
+  background: var(--green-pale);
+  border-radius: 5px;
+  border: 1px solid var(--border);
+}
+
+.beer-link:hover { background: var(--border); }
+.beer-link.brewfather { color: var(--green-deeper); }
+
+.beer-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+}
+
+.beer-card-actions .btn { flex: 1; justify-content: center; }
+
+/* ═══════════════════════════════════════════════════
+   FORM CARDS (mijn beoordelingen mobiel)
+   ═══════════════════════════════════════════════════ */
+
+.form-card {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-card:hover {
+  border-color: var(--green);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.form-card:active { transform: translateY(0); }
+
+.form-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-card-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.form-card-session {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.form-card-score {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.form-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+}
+
+.form-card-action {
+  font-size: 0.8rem;
+  color: var(--green-dark);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════
+   SCORE PILLS (kleine label+waarde blokjes)
+   ═══════════════════════════════════════════════════ */
+
+.score-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.score-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 7px;
+  padding: 5px 9px;
+  min-width: 48px;
+}
+
+.score-pill-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.score-pill-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--green-dark);
+  font-family: 'Fraunces', serif;
+  line-height: 1.2;
+}
+
+/* ═══════════════════════════════════════════════════
+   BREWERY REVIEW CARDS (mijn brouwerij mobiel)
+   ═══════════════════════════════════════════════════ */
+
+.brewery-review-card {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+.brewery-review-note {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.82rem;
+  color: var(--text);
+  font-style: italic;
+}
