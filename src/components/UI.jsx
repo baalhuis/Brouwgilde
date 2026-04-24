@@ -25,9 +25,9 @@ export function Alert({ type = 'info', children }) {
 export function ScoreDisplay({ score }) {
   if (score == null) return <span className="text-muted">—</span>
   const n = parseFloat(score)
-  const color = n >= 8 ? '#2e7d32' : n >= 6 ? '#c8862a' : n >= 4 ? '#b5651d' : '#c0392b'
+  const color = n >= 8 ? '#4a7c2f' : n >= 6 ? '#6a8a2e' : n >= 4 ? '#c17f24' : '#c0392b'
   return (
-    <span style={{ color, fontWeight: 700, fontFamily: "'Playfair Display', serif", fontSize: '1.1rem' }}>
+    <span style={{ color, fontWeight: 700, fontFamily: "'Fraunces', serif", fontSize: '1.1rem' }}>
       {Number(score).toFixed(2)}
     </span>
   )
