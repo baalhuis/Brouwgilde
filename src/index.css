@@ -99,6 +99,11 @@ h1, h2, h3, h4 {
   display: block;
   font-size: 0.92rem;
   font-weight: 600;
+  /* Prevent long usernames from breaking layout */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .sidebar-badge {
@@ -767,6 +772,10 @@ h1, h2, h3, h4 {
   .mobile-user {
     font-size: 0.78rem;
     color: rgba(255,255,255,0.45);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
   }
 
   .hamburger {
@@ -849,4 +858,34 @@ h1, h2, h3, h4 {
 @media (max-width: 400px) {
   .main { padding: 70px 12px 20px; }
   .login-box { padding: 28px 20px; }
+}
+
+/* ── TEXT TRUNCATION UTILITIES ───────────────────── */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Sidebar brewery name */
+.sidebar-user .brewery-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Table cells — prevent overflow */
+.table td {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* But let some columns wrap naturally */
+.table td.wrap {
+  white-space: normal;
+  overflow: visible;
 }

@@ -81,7 +81,7 @@ function AppShell() {
         <strong>{profile.username}</strong>
         <span className="sidebar-badge">{role}</span>
         {profile.brewery_name && (
-          <div style={{ marginTop: 3, fontSize: '0.74rem', color: 'rgba(255,255,255,0.38)' }}>
+          <div className="brewery-name" style={{ marginTop: 3, fontSize: '0.74rem', color: 'rgba(255,255,255,0.38)' }}>
             {profile.brewery_name}
           </div>
         )}
