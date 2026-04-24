@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AuthProvider, useAuth, useRole } from './lib/AuthContext'
 import { signOut } from './lib/supabase'
 import { Spinner } from './components/UI'
+import { LogoWhite } from './components/Logo'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import BeersPage from './pages/BeersPage'
@@ -26,9 +27,9 @@ function AppShell() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)' }}>
-      <div style={{ textAlign: 'center', color: 'var(--amber-light)' }}>
-        <div style={{ fontSize: '3rem', marginBottom: 16 }}>🍺</div>
-        <div className="spinner" style={{ borderTopColor: 'var(--amber-light)', borderColor: 'rgba(240,200,106,0.3)' }} />
+      <div style={{ textAlign: 'center' }}>
+        <LogoWhite style={{ maxWidth: 180, margin: '0 auto 24px' }} />
+        <div className="spinner" style={{ borderTopColor: 'var(--green)', borderColor: 'rgba(145,179,77,0.2)', margin: '0 auto' }} />
       </div>
     </div>
   )
@@ -36,7 +37,6 @@ function AppShell() {
   if (!profile) return <LoginPage />
 
   const visibleNav = NAV.filter(n => !n.roles || n.roles.includes(role))
-
   const sections = []
   const seen = new Set()
   visibleNav.forEach(n => {
@@ -71,18 +71,20 @@ function AppShell() {
   const sidebarContent = (
     <>
       <div className="sidebar-logo">
-        <h1>Brouwgilde</h1>
-        <span>Breda</span>
+        <LogoWhite style={{ maxWidth: 170, marginBottom: 8 }} />
+        <span className="sidebar-logo-sub">Proefplatform</span>
       </div>
+
       <div className="sidebar-user">
         <strong>{profile.username}</strong>
         <span className="sidebar-badge">{role}</span>
         {profile.brewery_name && (
-          <div style={{ marginTop: 3, fontSize: '0.75rem', color: 'rgba(245,239,224,0.45)' }}>
+          <div style={{ marginTop: 3, fontSize: '0.74rem', color: 'rgba(255,255,255,0.4)' }}>
             {profile.brewery_name}
           </div>
         )}
       </div>
+
       <nav className="nav">
         {sections.map(sec => {
           const items = visibleNav.filter(n => (n.section || '') === sec)
@@ -103,6 +105,7 @@ function AppShell() {
           )
         })}
       </nav>
+
       <div className="sidebar-footer">
         <button className="btn-logout" onClick={handleLogout}>Uitloggen</button>
       </div>
@@ -111,13 +114,10 @@ function AppShell() {
 
   return (
     <div className="app-shell">
+      {/* Desktop sidebar */}
+      <aside className="sidebar sidebar-desktop">{sidebarContent}</aside>
 
-      {/* ── Desktop sidebar ─────────────────────────── */}
-      <aside className="sidebar sidebar-desktop">
-        {sidebarContent}
-      </aside>
-
-      {/* ── Mobile top bar ──────────────────────────── */}
+      {/* Mobile topbar */}
       <header className="mobile-topbar">
         <div className="mobile-topbar-left">
           <button className="hamburger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
@@ -132,21 +132,13 @@ function AppShell() {
         <span className="mobile-user">{profile.username}</span>
       </header>
 
-      {/* ── Mobile drawer overlay ────────────────────── */}
-      {menuOpen && (
-        <div className="mobile-overlay" onClick={() => setMenuOpen(false)} />
-      )}
+      {menuOpen && <div className="mobile-overlay" onClick={() => setMenuOpen(false)} />}
 
-      {/* ── Mobile drawer ───────────────────────────── */}
       <aside className={`sidebar sidebar-mobile ${menuOpen ? 'open' : ''}`}>
         {sidebarContent}
       </aside>
 
-      {/* ── Main content ────────────────────────────── */}
-      <main className="main">
-        {renderPage()}
-      </main>
-
+      <main className="main">{renderPage()}</main>
     </div>
   )
 }
