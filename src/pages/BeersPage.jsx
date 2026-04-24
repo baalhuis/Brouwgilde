@@ -99,19 +99,22 @@ export default function BeersPage() {
   const { isSuperuser } = useRole()
   const [beers, setBeers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState(null) // null | { beer }
+  const [error, setError] = useState("")
+  const [modal, setModal] = useState(null)
   const [filterQ, setFilterQ] = useState('')
   const [filterCat, setFilterCat] = useState('')
-  const [scoreMap, setScoreMap] = useState({}) // beerId → avg score
 
   async function load() {
     setLoading(true)
     try {
       const data = await getBeers()
-      setBeers(data)
-      // We'd ideally call leaderboard but let's just show per-beer average inline
-      // using the view via a simple query; simplified here
-    } finally { setLoading(false) }
+      setBeers(data ?? [])
+    } catch (err) {
+      console.error('Fout bij ophalen bieren:', err)
+      setError('Kon bieren niet laden: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -144,6 +147,7 @@ export default function BeersPage() {
   })
 
   if (loading) return <Spinner />
+  if (error) return <div className="alert alert-error" style={{margin:20}}>{error}<br/><button className="btn btn-ghost btn-sm" style={{marginTop:8}} onClick={load}>Opnieuw proberen</button></div>
 
   return (
     <div>
