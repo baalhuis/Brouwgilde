@@ -10,18 +10,19 @@ import { MyFormsPage, MyBreweryPage } from './pages/MyPages'
 import AdminPage from './pages/AdminPage'
 
 const NAV = [
-  { key: 'dashboard', label: 'Dashboard', icon: '🏠' },
-  { key: 'beers',     label: 'Bieren',    icon: '🍺', section: 'Bieren' },
-  { key: 'sessions',  label: 'Proefsessies', icon: '🎯', section: 'Sessies' },
+  { key: 'dashboard', label: 'Dashboard',         icon: '🏠' },
+  { key: 'beers',     label: 'Bieren',             icon: '🍺', section: 'Bieren' },
+  { key: 'sessions',  label: 'Proefsessies',       icon: '🎯', section: 'Sessies' },
   { key: 'myforms',   label: 'Mijn beoordelingen', icon: '📋', section: 'Sessies' },
-  { key: 'mybrewery', label: 'Mijn brouwerij', icon: '🏭', section: 'Brouwerij', roles: ['brouwer','admin','superuser'] },
-  { key: 'admin',     label: 'Beheer',    icon: '⚙️', section: 'Admin', roles: ['admin','superuser'] },
+  { key: 'mybrewery', label: 'Mijn brouwerij',     icon: '🏭', section: 'Brouwerij', roles: ['brouwer','admin','superuser'] },
+  { key: 'admin',     label: 'Beheer',             icon: '⚙️', section: 'Admin', roles: ['admin','superuser'] },
 ]
 
 function AppShell() {
   const { profile, loading } = useAuth()
-  const { role, isAdmin } = useRole()
+  const { role } = useRole()
   const [page, setPage] = useState('dashboard')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)' }}>
@@ -36,7 +37,6 @@ function AppShell() {
 
   const visibleNav = NAV.filter(n => !n.roles || n.roles.includes(role))
 
-  // Group nav items by section
   const sections = []
   const seen = new Set()
   visibleNav.forEach(n => {
@@ -47,6 +47,12 @@ function AppShell() {
   async function handleLogout() {
     await signOut()
     setPage('dashboard')
+    setMenuOpen(false)
+  }
+
+  function navigate(key) {
+    setPage(key)
+    setMenuOpen(false)
   }
 
   function renderPage() {
@@ -60,55 +66,87 @@ function AppShell() {
     }
   }
 
+  const currentNav = visibleNav.find(n => n.key === page)
+
+  const sidebarContent = (
+    <>
+      <div className="sidebar-logo">
+        <h1>Brouwgilde</h1>
+        <span>Breda</span>
+      </div>
+      <div className="sidebar-user">
+        <strong>{profile.username}</strong>
+        <span className="sidebar-badge">{role}</span>
+        {profile.brewery_name && (
+          <div style={{ marginTop: 3, fontSize: '0.75rem', color: 'rgba(245,239,224,0.45)' }}>
+            {profile.brewery_name}
+          </div>
+        )}
+      </div>
+      <nav className="nav">
+        {sections.map(sec => {
+          const items = visibleNav.filter(n => (n.section || '') === sec)
+          return (
+            <div key={sec}>
+              {sec && <div className="nav-section">{sec}</div>}
+              {items.map(n => (
+                <button
+                  key={n.key}
+                  className={`nav-item ${page === n.key ? 'active' : ''}`}
+                  onClick={() => navigate(n.key)}
+                >
+                  <span className="icon">{n.icon}</span>
+                  {n.label}
+                </button>
+              ))}
+            </div>
+          )
+        })}
+      </nav>
+      <div className="sidebar-footer">
+        <button className="btn-logout" onClick={handleLogout}>Uitloggen</button>
+      </div>
+    </>
+  )
+
   return (
     <div className="app-shell">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-logo">
-          <h1>Brouwgilde</h1>
-          <span>Breda</span>
-        </div>
 
-        <div className="sidebar-user">
-          <strong>{profile.username}</strong>
-          <span className="sidebar-badge">{role}</span>
-          {profile.brewery_name && (
-            <div style={{ marginTop: 3, fontSize: '0.75rem', color: 'rgba(245,239,224,0.45)' }}>
-              {profile.brewery_name}
-            </div>
-          )}
-        </div>
-
-        <nav className="nav">
-          {sections.map(sec => {
-            const items = visibleNav.filter(n => (n.section || '') === sec)
-            return (
-              <div key={sec}>
-                {sec && <div className="nav-section">{sec}</div>}
-                {items.map(n => (
-                  <button
-                    key={n.key}
-                    className={`nav-item ${page === n.key ? 'active' : ''}`}
-                    onClick={() => setPage(n.key)}
-                  >
-                    <span className="icon">{n.icon}</span>
-                    {n.label}
-                  </button>
-                ))}
-              </div>
-            )
-          })}
-        </nav>
-
-        <div className="sidebar-footer">
-          <button className="btn-logout" onClick={handleLogout}>Uitloggen</button>
-        </div>
+      {/* ── Desktop sidebar ─────────────────────────── */}
+      <aside className="sidebar sidebar-desktop">
+        {sidebarContent}
       </aside>
 
-      {/* Main content */}
+      {/* ── Mobile top bar ──────────────────────────── */}
+      <header className="mobile-topbar">
+        <div className="mobile-topbar-left">
+          <button className="hamburger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+          </button>
+          <span className="mobile-title">
+            {currentNav ? `${currentNav.icon} ${currentNav.label}` : '🍺 Brouwgilde'}
+          </span>
+        </div>
+        <span className="mobile-user">{profile.username}</span>
+      </header>
+
+      {/* ── Mobile drawer overlay ────────────────────── */}
+      {menuOpen && (
+        <div className="mobile-overlay" onClick={() => setMenuOpen(false)} />
+      )}
+
+      {/* ── Mobile drawer ───────────────────────────── */}
+      <aside className={`sidebar sidebar-mobile ${menuOpen ? 'open' : ''}`}>
+        {sidebarContent}
+      </aside>
+
+      {/* ── Main content ────────────────────────────── */}
       <main className="main">
         {renderPage()}
       </main>
+
     </div>
   )
 }
