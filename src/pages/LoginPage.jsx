@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { signIn, signUp } from '../lib/supabase'
 import { Alert } from '../components/UI'
+import { LogoGreen } from '../components/Logo'
 
 export default function LoginPage() {
   const [tab, setTab] = useState('login')
@@ -15,7 +16,6 @@ export default function LoginPage() {
     e.preventDefault(); setError(''); setLoading(true)
     try {
       await signIn(loginForm.email, loginForm.password)
-      // AuthContext picks up the session change automatically
     } catch (err) {
       setError(err.message === 'Invalid login credentials'
         ? 'Ongeldig e-mailadres of wachtwoord.'
@@ -34,8 +34,9 @@ export default function LoginPage() {
     }
     try {
       await signUp(email, password, username, breweryName)
-      setInfo('Registratie gelukt! Controleer je e-mail om je account te bevestigen. Daarna kun je inloggen.')
+      setInfo('Registratie gelukt! Je kunt nu direct inloggen.')
       setTab('login')
+      setLoginForm(p => ({ ...p, email }))
     } catch (err) {
       setError(err.message.includes('already registered')
         ? 'Dit e-mailadres is al geregistreerd.'
@@ -47,54 +48,69 @@ export default function LoginPage() {
     <div className="login-wrap">
       <div className="login-box">
         <div className="login-logo">
-          <h1>🍺 Brouwgilde</h1>
-          <p>Breda — Digitaal Proefplatform</p>
+          <LogoGreen style={{ maxWidth: 220, margin: '0 auto 16px' }} />
+          <p>Digitaal Proefplatform</p>
         </div>
 
         <div className="tabs">
-          <div className={`tab ${tab === 'login' ? 'active' : ''}`} onClick={() => { setTab('login'); setError(''); setInfo('') }}>Inloggen</div>
-          <div className={`tab ${tab === 'register' ? 'active' : ''}`} onClick={() => { setTab('register'); setError(''); setInfo('') }}>Registreren</div>
+          <div className={`tab ${tab === 'login' ? 'active' : ''}`}
+            onClick={() => { setTab('login'); setError(''); setInfo('') }}>
+            Inloggen
+          </div>
+          <div className={`tab ${tab === 'register' ? 'active' : ''}`}
+            onClick={() => { setTab('register'); setError(''); setInfo('') }}>
+            Registreren
+          </div>
         </div>
 
         {error && <Alert type="error">{error}</Alert>}
-        {info && <Alert type="success">{info}</Alert>}
+        {info  && <Alert type="success">{info}</Alert>}
 
         {tab === 'login' ? (
           <form onSubmit={handleLogin}>
             <div className="form-group">
               <label className="form-label">E-mailadres</label>
               <input className="form-input" type="email" autoFocus required
-                value={loginForm.email} onChange={e => setLoginForm(p => ({ ...p, email: e.target.value }))} />
+                value={loginForm.email}
+                onChange={e => setLoginForm(p => ({ ...p, email: e.target.value }))} />
             </div>
             <div className="form-group">
               <label className="form-label">Wachtwoord</label>
               <input className="form-input" type="password" required
-                value={loginForm.password} onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))} />
+                value={loginForm.password}
+                onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))} />
             </div>
-            <button className="btn btn-primary" style={{ width: '100%' }} type="submit" disabled={loading}>
-              {loading ? 'Bezig...' : 'Inloggen'}
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+              type="submit" disabled={loading}>
+              {loading ? 'Bezig...' : 'Inloggen →'}
             </button>
           </form>
         ) : (
           <form onSubmit={handleRegister}>
             <div className="form-group">
               <label className="form-label">Gebruikersnaam <span className="req">*</span></label>
-              <input className="form-input" required value={regForm.username} onChange={e => setRegForm(p => ({ ...p, username: e.target.value }))} />
+              <input className="form-input" required value={regForm.username}
+                onChange={e => setRegForm(p => ({ ...p, username: e.target.value }))} />
             </div>
             <div className="form-group">
               <label className="form-label">E-mailadres <span className="req">*</span></label>
-              <input className="form-input" type="email" required value={regForm.email} onChange={e => setRegForm(p => ({ ...p, email: e.target.value }))} />
+              <input className="form-input" type="email" required value={regForm.email}
+                onChange={e => setRegForm(p => ({ ...p, email: e.target.value }))} />
             </div>
             <div className="form-group">
               <label className="form-label">Wachtwoord <span className="req">*</span></label>
-              <input className="form-input" type="password" required value={regForm.password} onChange={e => setRegForm(p => ({ ...p, password: e.target.value }))} />
+              <input className="form-input" type="password" required value={regForm.password}
+                onChange={e => setRegForm(p => ({ ...p, password: e.target.value }))} />
             </div>
             <div className="form-group">
               <label className="form-label">Naam brouwerij <span className="req">*</span></label>
-              <input className="form-input" required placeholder="Jouw brouwerijnaam" value={regForm.breweryName} onChange={e => setRegForm(p => ({ ...p, breweryName: e.target.value }))} />
+              <input className="form-input" required placeholder="Jouw brouwerijnaam"
+                value={regForm.breweryName}
+                onChange={e => setRegForm(p => ({ ...p, breweryName: e.target.value }))} />
             </div>
-            <button className="btn btn-primary" style={{ width: '100%' }} type="submit" disabled={loading}>
-              {loading ? 'Bezig...' : 'Account aanmaken'}
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+              type="submit" disabled={loading}>
+              {loading ? 'Bezig...' : 'Account aanmaken →'}
             </button>
           </form>
         )}

@@ -10,9 +10,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       const [sessions, beers, myForms] = await Promise.all([
-        getSessions(),
-        getBeers(),
-        getMyForms(profile.id),
+        getSessions(), getBeers(), getMyForms(profile.id),
       ])
       setStats({
         totalBeers: beers.length,
@@ -31,28 +29,30 @@ export default function Dashboard() {
   return (
     <div>
       <div className="page-header">
-        <h2>Welkom, {profile.username}! 🍺</h2>
-        <p>Brouwgilde Breda — Digitaal Proefplatform</p>
+        <h2>Welkom, {profile.username}!</h2>
+        <p>Overzicht van het Brouwgilde Breda proefplatform</p>
       </div>
 
-      <div className="form-row-3" style={{ marginBottom: 24 }}>
+      {/* Stats */}
+      <div className="form-row-3" style={{ marginBottom: 32 }}>
         {[
-          ['🍺', totalBeers, 'Bieren in systeem'],
+          ['🍺', totalBeers,          'Bieren'],
           ['🎯', openSessions.length, 'Actieve sessies'],
-          ['📋', myForms, 'Jouw beoordelingen'],
-          ['🏭', mySessions.length, 'Aangemeld voor'],
+          ['📋', myForms,             'Jouw beoordelingen'],
+          ['🏭', mySessions.length,   'Aangemeld voor'],
         ].map(([icon, num, label]) => (
-          <div key={label} className="card" style={{ textAlign: 'center', padding: 20 }}>
-            <div style={{ fontSize: '2rem' }}>{icon}</div>
-            <div style={{ fontSize: '2rem', fontFamily: "'Playfair Display', serif", color: 'var(--amber-dark)', fontWeight: 700, lineHeight: 1.2 }}>{num}</div>
-            <div className="text-muted">{label}</div>
+          <div key={label} className="stat-card">
+            <div style={{ fontSize: '1.6rem' }}>{icon}</div>
+            <div className="stat-number">{num}</div>
+            <div className="stat-label">{label}</div>
           </div>
         ))}
       </div>
 
+      {/* Open sessions */}
       {openSessions.length > 0 && (
         <>
-          <h3 className="section-title">Actieve proefsessies</h3>
+          <h3 className="section-title">🎯 Actieve proefsessies</h3>
           <div className="card-grid">
             {openSessions.map(s => (
               <div key={s.id} className="card">
@@ -66,6 +66,13 @@ export default function Dashboard() {
             ))}
           </div>
         </>
+      )}
+
+      {openSessions.length === 0 && (
+        <div className="card" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🍺</div>
+          <p>Geen actieve proefsessies op dit moment.</p>
+        </div>
       )}
     </div>
   )
