@@ -76,10 +76,10 @@ export async function updateProfile(userId, updates) {
 export async function getBeers() {
   const { data, error } = await supabase
     .from('beers')
-    .select(`*, owner:profiles(username, brewery_name)`)
+    .select('*')
     .order('created_at', { ascending: false })
   if (error) throw error
-  return data
+  return data ?? []
 }
 
 export async function createBeer(beer) {
@@ -115,13 +115,13 @@ export async function getSessions() {
     .from('sessions')
     .select(`
       *,
-      admin:profiles(username),
       session_participants(user_id),
-      session_beers(beer_id, identifier, beer:beers(*))
+      session_beers(beer_id, identifier, beer:beers(*)),
+      session_assignments(user_id, beer_id)
     `)
     .order('datum', { ascending: false })
   if (error) throw error
-  return data
+  return data ?? []
 }
 
 export async function createSession(session) {
@@ -240,12 +240,21 @@ export async function getMyForms(userId) {
 }
 
 export async function getFormsForMyBeers(ownerId) {
+  // First get the owner's beers, then get forms for those beers
+  const { data: myBeers, error: beersErr } = await supabase
+    .from('beers')
+    .select('id')
+    .eq('owner_id', ownerId)
+  if (beersErr) throw beersErr
+  if (!myBeers || myBeers.length === 0) return []
+
+  const beerIds = myBeers.map(b => b.id)
   const { data, error } = await supabase
     .from('tasting_forms')
-    .select(`*, user:profiles(username), beer:beers!inner(naam, biertype, brouwerij, categorie, owner_id), session:sessions(naam, type)`)
-    .eq('beer.owner_id', ownerId)
+    .select(`*, user:profiles(username), beer:beers(naam, biertype, brouwerij, categorie, owner_id), session:sessions(naam, type)`)
+    .in('beer_id', beerIds)
   if (error) throw error
-  return data
+  return data ?? []
 }
 
 export async function upsertForm(form) {
