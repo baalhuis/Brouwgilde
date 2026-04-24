@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { signIn, signUp } from '../lib/supabase'
 import { Alert } from '../components/UI'
-import { LogoGreen } from '../components/Logo'
+import { LogoGreen, HopsDecoration } from '../components/Logo'
 
 export default function LoginPage() {
   const [tab, setTab] = useState('login')
@@ -47,9 +47,16 @@ export default function LoginPage() {
   return (
     <div className="login-wrap">
       <div className="login-box">
+
+        {/* Logo */}
         <div className="login-logo">
-          <LogoGreen style={{ maxWidth: 220, margin: '0 auto 16px' }} />
+          <LogoGreen style={{ width: 160, margin: '0 auto 10px' }} />
           <p>Digitaal Proefplatform</p>
+        </div>
+
+        {/* Decorative hops strip */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20, opacity: 0.25 }}>
+          <HopsDecoration style={{ width: 100 }} />
         </div>
 
         <div className="tabs">
@@ -80,7 +87,8 @@ export default function LoginPage() {
                 value={loginForm.password}
                 onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))} />
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+            <button className="btn btn-primary"
+              style={{ width: '100%', justifyContent: 'center', marginTop: 6 }}
               type="submit" disabled={loading}>
               {loading ? 'Bezig...' : 'Inloggen →'}
             </button>
@@ -108,7 +116,8 @@ export default function LoginPage() {
                 value={regForm.breweryName}
                 onChange={e => setRegForm(p => ({ ...p, breweryName: e.target.value }))} />
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+            <button className="btn btn-primary"
+              style={{ width: '100%', justifyContent: 'center', marginTop: 6 }}
               type="submit" disabled={loading}>
               {loading ? 'Bezig...' : 'Account aanmaken →'}
             </button>

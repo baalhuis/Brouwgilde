@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AuthProvider, useAuth, useRole } from './lib/AuthContext'
 import { signOut } from './lib/supabase'
 import { Spinner } from './components/UI'
-import { LogoWhite } from './components/Logo'
+import { LogoWhite, HopsDecoration } from './components/Logo'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import BeersPage from './pages/BeersPage'
@@ -28,8 +28,8 @@ function AppShell() {
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)' }}>
       <div style={{ textAlign: 'center' }}>
-        <LogoWhite style={{ maxWidth: 180, margin: '0 auto 24px' }} />
-        <div className="spinner" style={{ borderTopColor: 'var(--green)', borderColor: 'rgba(145,179,77,0.2)', margin: '0 auto' }} />
+        <LogoWhite style={{ width: 140, margin: '0 auto 28px' }} />
+        <div className="spinner" style={{ margin: '0 auto', borderTopColor: 'var(--green)', borderColor: 'rgba(145,179,77,0.2)' }} />
       </div>
     </div>
   )
@@ -70,21 +70,24 @@ function AppShell() {
 
   const sidebarContent = (
     <>
+      {/* Logo area */}
       <div className="sidebar-logo">
-        <LogoWhite style={{ maxWidth: 170, marginBottom: 8 }} />
+        <LogoWhite style={{ width: 130, marginBottom: 6 }} />
         <span className="sidebar-logo-sub">Proefplatform</span>
       </div>
 
+      {/* User info */}
       <div className="sidebar-user">
         <strong>{profile.username}</strong>
         <span className="sidebar-badge">{role}</span>
         {profile.brewery_name && (
-          <div style={{ marginTop: 3, fontSize: '0.74rem', color: 'rgba(255,255,255,0.4)' }}>
+          <div style={{ marginTop: 3, fontSize: '0.74rem', color: 'rgba(255,255,255,0.38)' }}>
             {profile.brewery_name}
           </div>
         )}
       </div>
 
+      {/* Navigation */}
       <nav className="nav">
         {sections.map(sec => {
           const items = visibleNav.filter(n => (n.section || '') === sec)
@@ -106,7 +109,9 @@ function AppShell() {
         })}
       </nav>
 
+      {/* Decorative hops + logout */}
       <div className="sidebar-footer">
+        <HopsDecoration style={{ width: 80, opacity: 0.15, margin: '0 auto 12px' }} />
         <button className="btn-logout" onClick={handleLogout}>Uitloggen</button>
       </div>
     </>
