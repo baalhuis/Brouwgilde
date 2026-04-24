@@ -176,27 +176,32 @@ export default function BeersPage() {
               <thead>
                 <tr>
                   <th>Naam</th>
-                  <th>Brouwerij</th>
+                  <th className="hide-mobile">Brouwerij</th>
                   <th>Type</th>
                   <th>Cat.</th>
-                  <th>ABV</th>
-                  <th>EBC</th>
-                  <th>IBU</th>
-                  <th>Links</th>
+                  <th className="hide-mobile">ABV</th>
+                  <th className="hide-mobile">EBC</th>
+                  <th className="hide-mobile">IBU</th>
+                  <th className="hide-mobile">Links</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(b => (
                   <tr key={b.id}>
-                    <td><strong>{b.naam}</strong></td>
-                    <td>{b.brouwerij}</td>
+                    <td>
+                      <strong>{b.naam}</strong>
+                      <div className="text-muted" style={{ fontSize: '0.75rem', marginTop: 2 }}>
+                        {b.brouwerij} · {b.abv}%
+                      </div>
+                    </td>
+                    <td className="hide-mobile">{b.brouwerij}</td>
                     <td><span className="badge badge-muted">{b.biertype}</span></td>
                     <td><span className="badge badge-amber">{b.categorie}</span></td>
-                    <td>{b.abv}%</td>
-                    <td>{b.ebc}</td>
-                    <td>{b.ibu}</td>
-                    <td>
+                    <td className="hide-mobile">{b.abv}%</td>
+                    <td className="hide-mobile">{b.ebc}</td>
+                    <td className="hide-mobile">{b.ibu}</td>
+                    <td className="hide-mobile">
                       <div className="flex-gap">
                         {b.untappd_url && <a href={b.untappd_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.75rem', color: 'var(--amber-dark)' }}>Untappd ↗</a>}
                         {b.brewfather_url && <a href={b.brewfather_url} target="_blank" rel="noreferrer" style={{ fontSize: '0.75rem', color: 'var(--hop)' }}>Brewfather ↗</a>}
