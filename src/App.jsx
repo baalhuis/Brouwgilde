@@ -106,7 +106,7 @@ function AppShell() {
         })}
       </nav>
       <div className="sidebar-footer">
-        <HopsDecoration style={{ width: 80, opacity: 0.15, display: 'block', margin: '0 auto 12px' }} />
+        <HopsDecoration style={{ width: 80, opacity: 0.15, marginBottom: 12 }} />
         <button className="btn-logout" onClick={handleLogout}>Uitloggen</button>
       </div>
     </>
