@@ -193,7 +193,7 @@ function BeerCard({ beer, canEdit, canDelete, onEdit, onDelete }) {
 // ── Main page ──────────────────────────────────────────────────
 export default function BeersPage() {
   const { profile } = useAuth()
-  const { isSuperuser } = useRole()
+  const { isSuperuser, isAdmin } = useRole()
   const [beers, setBeers] = useState([])
   const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(true)
