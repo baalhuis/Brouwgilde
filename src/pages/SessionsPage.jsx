@@ -146,65 +146,78 @@ function ManageBeersModal({ session, allBeers, onClose, onUpdate }) {
 
   const userAssignedBeers = (userId) => assignments.filter(a => a.user_id === userId).map(a => a.beer_id)
 
+  const [searchBeer, setSearchBeer] = useState('')
+  const filteredAddable = addableBeers.filter(b =>
+    !searchBeer || b.naam.toLowerCase().includes(searchBeer.toLowerCase()) ||
+    b.brouwerij.toLowerCase().includes(searchBeer.toLowerCase())
+  )
+
   return (
     <Modal title={`Bieren beheren — ${session.naam}`} onClose={onClose} wide>
-      <SectionTitle>Bieren in deze sessie ({sessBeers.length})</SectionTitle>
+
+      {/* Bieren in sessie */}
+      <SectionTitle>In deze sessie ({sessBeers.length})</SectionTitle>
       {sessBeers.length === 0
         ? <p className="text-muted mb-2">Nog geen bieren toegevoegd.</p>
-        : (
-          <table className="table mb-2">
-            <thead>
-              <tr>
-                <th>Naam</th><th>Brouwerij</th><th>Type</th>
-                {isChamp && <th>Identifier</th>}
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessBeers.map(sb => (
-                <tr key={sb.beer_id}>
-                  <td><strong>{sb.beer.naam}</strong></td>
-                  <td>{sb.beer.brouwerij}</td>
-                  <td>{sb.beer.biertype}</td>
-                  {isChamp && (
-                    <td>
-                      <input className="form-input" style={{ padding: '3px 6px', fontSize: '0.8rem', width: 100, fontFamily: 'monospace' }}
-                        defaultValue={sb.identifier || ''} onBlur={e => handleUpdateId(sb.beer_id, e.target.value)} />
-                    </td>
-                  )}
-                  <td><button className="btn btn-danger btn-sm" onClick={() => handleRemoveBeer(sb.beer_id)}>✕</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        : sessBeers.map(sb => (
+          <div key={sb.beer_id} className="manage-beer-row">
+            <div className="manage-beer-info">
+              <strong>{sb.beer.naam}</strong>
+              <span className="text-muted" style={{ fontSize: '0.78rem' }}>
+                {sb.beer.brouwerij} · {sb.beer.biertype}
+              </span>
+            </div>
+            <div className="manage-beer-actions">
+              {isChamp && (
+                <input className="form-input" style={{ width: 90, padding: '4px 8px', fontSize: '0.82rem', fontFamily: 'monospace' }}
+                  defaultValue={sb.identifier || ''} onBlur={e => handleUpdateId(sb.beer_id, e.target.value)}
+                  placeholder="ID-001" />
+              )}
+              <button className="btn btn-danger btn-sm" onClick={() => handleRemoveBeer(sb.beer_id)}>🗑</button>
+            </div>
+          </div>
+        ))
+      }
 
-      <SectionTitle>Bier toevoegen</SectionTitle>
+      {/* Bier toevoegen */}
+      <SectionTitle style={{ marginTop: 16 }}>Bier toevoegen</SectionTitle>
       {addableBeers.length === 0
         ? <p className="text-muted mb-2">Alle bieren zijn al toegevoegd.</p>
-        : (
-          <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 7 }}>
-            {addableBeers.map(b => (
-              <div key={b.id} className="flex-between" style={{ padding: '7px 12px', borderBottom: '1px solid #e8dfc8' }}>
-                <span style={{ fontSize: '0.85rem' }}>{b.naam} <span className="text-muted">– {b.brouwerij} · {b.biertype}</span></span>
-                <button className="btn btn-secondary btn-sm" onClick={() => handleAddBeer(b.id)}>+ Toevoegen</button>
-              </div>
-            ))}
+        : <>
+          <input className="form-input mb-1" placeholder="Zoek op naam of brouwerij..."
+            value={searchBeer} onChange={e => setSearchBeer(e.target.value)}
+            style={{ marginBottom: 8 }} />
+          <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid var(--border-light)', borderRadius: 8 }}>
+            {filteredAddable.length === 0
+              ? <p className="text-muted" style={{ padding: '12px 14px', fontSize: '0.85rem' }}>Geen bieren gevonden.</p>
+              : filteredAddable.map(b => (
+                <div key={b.id} className="manage-beer-add-row">
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.88rem' }} className="cell-truncate">{b.naam}</div>
+                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>{b.brouwerij} · {b.biertype}</div>
+                  </div>
+                  <button className="btn btn-secondary btn-sm" style={{ flexShrink: 0 }}
+                    onClick={() => handleAddBeer(b.id)}>+ Toevoegen</button>
+                </div>
+              ))
+            }
           </div>
-        )}
+        </>
+      }
 
+      {/* Toewijzingen kampioenschap */}
       {isChamp && sessBeers.length > 0 && (
         <>
-          <SectionTitle style={{ marginTop: 20 }}>Toewijzingen per proever</SectionTitle>
-          <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+          <SectionTitle style={{ marginTop: 16 }}>Toewijzingen per proever</SectionTitle>
+          <div style={{ maxHeight: 260, overflowY: 'auto' }}>
             {profiles.filter(p => p.role !== 'superuser').map(p => {
               const assigned = userAssignedBeers(p.id)
               return (
-                <div key={p.id} style={{ marginBottom: 14, padding: '10px 12px', background: 'var(--parchment)', borderRadius: 8 }}>
-                  <strong style={{ fontSize: '0.88rem' }}>{p.username}</strong>
-                  <div className="flex-gap mt-1">
+                <div key={p.id} className="manage-assignment-row">
+                  <strong style={{ fontSize: '0.88rem', display: 'block', marginBottom: 6 }}>{p.username}</strong>
+                  <div className="flex-gap">
                     {sessBeers.map(sb => (
-                      <label key={sb.beer_id} style={{ display: 'flex', gap: 5, alignItems: 'center', fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <label key={sb.beer_id} className="checkbox-label" style={{ fontSize: '0.8rem' }}>
                         <input type="checkbox" checked={assigned.includes(sb.beer_id)}
                           onChange={e => handleAssignment(p.id, sb.beer_id, e.target.checked)} />
                         <span className="champagne-id">{sb.identifier || sb.beer.naam}</span>
