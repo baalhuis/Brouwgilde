@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AuthProvider, useAuth, useRole } from './lib/AuthContext'
 import { NavContext } from './lib/NavContext'
 import { signOut } from './lib/supabase'
@@ -20,11 +20,37 @@ const NAV = [
   { key: 'admin',     label: 'Beheer',             icon: '⚙️', section: 'Admin', roles: ['admin','superuser'] },
 ]
 
+const VALID_PAGES = NAV.map(n => n.key)
+
+// Lees de huidige pagina uit de URL: /beers → 'beers', / → 'dashboard'
+function getPageFromUrl() {
+  const path = window.location.pathname.replace(/^\//, '') || 'dashboard'
+  return VALID_PAGES.includes(path) ? path : 'dashboard'
+}
+
 function AppShell() {
   const { profile, loading } = useAuth()
   const { role } = useRole()
-  const [page, setPage] = useState('dashboard')
+  const [page, setPage] = useState(getPageFromUrl)
   const [menuOpen, setMenuOpen] = useState(false)
+
+  // Luister naar browser terug/vooruit
+  useEffect(() => {
+    function onPopState() {
+      setPage(getPageFromUrl())
+      window.scrollTo({ top: 0 })
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
+  // Zet de URL gelijk met de pagina bij eerste load (als URL nog niet klopt)
+  useEffect(() => {
+    const urlPage = getPageFromUrl()
+    if (urlPage !== page) {
+      window.history.replaceState({ page }, '', `/${page === 'dashboard' ? '' : page}`)
+    }
+  }, [])
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ink)' }}>
@@ -46,6 +72,10 @@ function AppShell() {
   })
 
   function navigate(key) {
+    if (key === page) return
+    // Schrijf naar browser-geschiedenis
+    const url = key === 'dashboard' ? '/' : `/${key}`
+    window.history.pushState({ page: key }, '', url)
     setPage(key)
     setMenuOpen(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -53,6 +83,7 @@ function AppShell() {
 
   async function handleLogout() {
     await signOut()
+    window.history.replaceState({ page: 'dashboard' }, '', '/')
     setPage('dashboard')
     setMenuOpen(false)
   }
