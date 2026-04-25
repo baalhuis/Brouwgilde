@@ -10,6 +10,7 @@ import {
 import { Modal, Alert, EmptyState, Spinner, SectionTitle, CATEGORIES } from '../components/UI'
 import TastingFormModal from '../components/TastingFormModal'
 import LeaderboardModal from '../components/LeaderboardModal'
+import ScoresModal from '../components/ScoresModal'
 import { calcScore } from '../components/UI'
 
 // ── Session form modal ─────────────────────────────────────────
@@ -222,6 +223,7 @@ export default function SessionsPage() {
   const [beersModal, setBeersModal] = useState(null)
   const [tastingModal, setTastingModal] = useState(null)
   const [leaderModal, setLeaderModal] = useState(null)
+  const [scoresModal, setScoresModal] = useState(null)
   const [showClosed, setShowClosed] = useState(false)
 
   async function load() {
@@ -377,6 +379,10 @@ export default function SessionsPage() {
                     <span className="session-btn-icon">📊</span>
                     <span className="session-btn-label">Leaderboard</span>
                   </button>
+                  <button className="session-btn" onClick={() => setScoresModal({ session: sess })}>
+                    <span className="session-btn-icon">📋</span>
+                    <span className="session-btn-label">Scores</span>
+                  </button>
                   {isSuperuser && (
                     <button className="session-btn session-btn--danger" onClick={() => handleDeleteSession(sess)}>
                       <span className="session-btn-icon">🗑</span>
@@ -495,6 +501,12 @@ export default function SessionsPage() {
         <LeaderboardModal
           session={leaderModal.session}
           onClose={() => setLeaderModal(null)}
+        />
+      )}
+      {scoresModal && (
+        <ScoresModal
+          session={scoresModal.session}
+          onClose={() => setScoresModal(null)}
         />
       )}
     </div>
