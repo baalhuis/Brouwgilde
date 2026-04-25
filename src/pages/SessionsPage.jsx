@@ -222,6 +222,7 @@ export default function SessionsPage() {
   const [beersModal, setBeersModal] = useState(null)
   const [tastingModal, setTastingModal] = useState(null)
   const [leaderModal, setLeaderModal] = useState(null)
+  const [showClosed, setShowClosed] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -320,9 +321,22 @@ export default function SessionsPage() {
         )}
       </div>
 
-      {sessions.length === 0
+      {/* Toggle gesloten sessies */}
+      <div style={{ marginBottom: 16 }}>
+        <label className="checkbox-label" style={{ cursor: 'pointer', display: 'inline-flex' }}>
+          <input type="checkbox" checked={showClosed} onChange={e => setShowClosed(e.target.checked)} />
+          Gesloten sessies weergeven
+          {sessions.filter(s => s.closed).length > 0 && (
+            <span className="badge badge-muted" style={{ marginLeft: 8 }}>
+              {sessions.filter(s => s.closed).length} gesloten
+            </span>
+          )}
+        </label>
+      </div>
+
+      {sessions.filter(s => showClosed || !s.closed).length === 0
         ? <EmptyState icon="🎪" message="Nog geen proefsessies aangemaakt." />
-        : sessions.map(sess => {
+        : sessions.filter(s => showClosed || !s.closed).map(sess => {
           const joined = isParticipant(sess)
           const sessAdmin = isSessionAdmin(sess)
           const beerList = getBeerList(sess)
