@@ -61,15 +61,15 @@ export function MyFormsPage() {
               <thead>
                 <tr>
                   <th>Bier</th>
-                  <th>Sessie</th>
-                  <th>Type</th>
-                  <th>Kleur</th>
-                  <th>Koolzuur</th>
-                  <th>Geur</th>
-                  <th>Smaak</th>
-                  <th>Nasmaak</th>
+                  <th className="hide-tablet">Sessie</th>
+                  <th className="hide-tablet">Type</th>
+                  <th className="hide-tablet">Kleur</th>
+                  <th className="hide-tablet">Koolzuur</th>
+                  <th className="hide-tablet">Geur</th>
+                  <th className="hide-tablet">Smaak</th>
+                  <th className="hide-tablet">Nasmaak</th>
                   <th>Score</th>
-                  <th>Datum</th>
+                  <th className="hide-tablet">Datum</th>
                   <th></th>
                 </tr>
               </thead>
@@ -79,19 +79,24 @@ export function MyFormsPage() {
                   const readOnly = sess?.closed || (sess?.edit_locked && profile?.role !== 'superuser')
                   return (
                     <tr key={f.id}>
-                      <td><strong>{f.beer?.naam || '—'}</strong></td>
-                      <td>{f.session?.naam || '—'}</td>
-                      <td>{f.session && <span className="badge badge-amber">{f.session.type}</span>}</td>
-                      <td>{f.kleur}</td>
-                      <td>{f.koolzuur}</td>
-                      <td>{f.geur}</td>
-                      <td>{f.smaak}</td>
-                      <td>{f.nasmaak}</td>
+                      <td>
+                        <strong>{f.beer?.naam || '—'}</strong>
+                        <div className="text-muted hide-tablet-inverse" style={{ fontSize: '0.75rem', marginTop: 2 }}>
+                          {f.session?.naam || '—'} · {new Date(f.created_at).toLocaleDateString('nl-NL')}
+                        </div>
+                      </td>
+                      <td className="hide-tablet">{f.session?.naam || '—'}</td>
+                      <td className="hide-tablet">{f.session && <span className="badge badge-amber">{f.session.type}</span>}</td>
+                      <td className="hide-tablet">{f.kleur}</td>
+                      <td className="hide-tablet">{f.koolzuur}</td>
+                      <td className="hide-tablet">{f.geur}</td>
+                      <td className="hide-tablet">{f.smaak}</td>
+                      <td className="hide-tablet">{f.nasmaak}</td>
                       <td><ScoreDisplay score={f.score} /></td>
-                      <td><span className="text-muted">{new Date(f.created_at).toLocaleDateString('nl-NL')}</span></td>
+                      <td className="hide-tablet"><span className="text-muted">{new Date(f.created_at).toLocaleDateString('nl-NL')}</span></td>
                       <td>
                         <button className="btn btn-ghost btn-sm" onClick={() => openForm(f)}>
-                          {readOnly ? '👁 Bekijken' : '✏️ Bewerken'}
+                          {readOnly ? '👁' : '✏️'}
                         </button>
                       </td>
                     </tr>

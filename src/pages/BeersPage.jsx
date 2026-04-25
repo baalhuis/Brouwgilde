@@ -249,27 +249,30 @@ export default function BeersPage() {
               <thead>
                 <tr>
                   <th>Naam</th>
-                  <th>Brouwerij</th>
+                  <th className="hide-tablet">Brouwerij</th>
                   <th>Type</th>
                   <th>Cat.</th>
                   <th>ABV</th>
-                  <th>EBC</th>
-                  <th>IBU</th>
-                  <th>Links</th>
+                  <th className="hide-tablet">EBC</th>
+                  <th className="hide-tablet">IBU</th>
+                  <th className="hide-tablet">Links</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(b => (
                   <tr key={b.id}>
-                    <td><strong>{b.naam}</strong></td>
-                    <td>{b.brouwerij}</td>
+                    <td>
+                      <strong>{b.naam}</strong>
+                      <div className="text-muted hide-tablet-inverse" style={{ fontSize: '0.75rem', marginTop: 2 }}>{b.brouwerij}</div>
+                    </td>
+                    <td className="hide-tablet">{b.brouwerij}</td>
                     <td><span className="badge badge-muted">{b.biertype}</span></td>
                     <td><span className="badge badge-hop">Cat. {b.categorie}</span></td>
                     <td>{b.abv}%</td>
-                    <td>{b.ebc}</td>
-                    <td>{b.ibu}</td>
-                    <td>
+                    <td className="hide-tablet">{b.ebc}</td>
+                    <td className="hide-tablet">{b.ibu}</td>
+                    <td className="hide-tablet">
                       <div className="flex-gap">
                         {b.untappd_url    && <a href={b.untappd_url}    target="_blank" rel="noreferrer" className="beer-link">Untappd ↗</a>}
                         {b.brewfather_url && <a href={b.brewfather_url} target="_blank" rel="noreferrer" className="beer-link brewfather">Brewfather ↗</a>}

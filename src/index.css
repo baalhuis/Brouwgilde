@@ -1846,10 +1846,10 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════
-   IPAD LANDSCAPE (900-1180px) — sidebar + compact main
+   IPAD LANDSCAPE (901-1180px) — sidebar + compact main
    ═══════════════════════════════════════════════════ */
 @media (min-width: 901px) and (max-width: 1180px) {
-  /* Smaller sidebar */
+  /* Sidebar compacter */
   .sidebar { width: 200px; }
   .sidebar-logo { padding: 20px 16px 14px; }
   .nav-item { padding: 9px 16px; font-size: 0.84rem; }
@@ -1857,20 +1857,32 @@ body {
   .sidebar-user { padding: 12px 16px; }
   .sidebar-footer { padding: 12px 16px; }
 
-  /* Main gets more room */
-  .main { margin-left: 200px; padding: 24px 20px; }
+  /* Main: meer ruimte, minder padding */
+  .main { margin-left: 200px; padding: 24px 16px; }
 
-  /* Tables — allow horizontal scroll in card */
-  .card { overflow-x: auto; }
-  .desktop-only .table,
-  .card .table { min-width: 560px; }
+  /* Verberg minder kritieke tabelkolommen op tablet */
+  .hide-tablet { display: none !important; }
 
-  /* form rows — 2 col max on tablet landscape */
-  .form-row-3 { grid-template-columns: 1fr 1fr; }
+  /* Tabellen: geen min-width, scrollen als nodig */
+  .table { min-width: unset; }
+  .desktop-only { overflow-x: auto; }
 
   /* Stats 2x2 */
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 
+  /* Form rows compacter */
+  .form-row-3 { grid-template-columns: 1fr 1fr; }
+
   /* Card grid smaller min */
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+
+  /* Modals iets smaller */
+  .modal { padding: 22px; }
+}
+
+/* ── hide-tablet-inverse: toon alleen op tablet (verberg op desktop) ── */
+.hide-tablet-inverse { display: none; }
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  .hide-tablet-inverse { display: block; }
 }
