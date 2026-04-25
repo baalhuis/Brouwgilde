@@ -34,7 +34,7 @@ export default function Dashboard() {
     { icon: '🍺', num: totalBeers,          label: 'Bieren',          page: 'beers',    hint: 'Bekijk alle bieren →' },
     { icon: '🎯', num: openSessions.length, label: 'Actieve sessies', page: 'sessions', hint: 'Naar proefsessies →' },
     { icon: '📋', num: myForms,             label: 'Mijn beoordelingen', page: 'myforms', hint: 'Bekijk jouw scores →' },
-    { icon: '🏭', num: mySessions.length,   label: 'Aangemeld voor',  page: 'sessions', hint: 'Naar proefsessies →' },
+    { icon: '🏭', num: mySessions.length,   label: 'Mijn brouwerij',  page: 'mybrewery', hint: 'Naar mijn brouwerij →' },
   ]
 
   return (
