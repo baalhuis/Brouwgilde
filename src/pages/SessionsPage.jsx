@@ -420,8 +420,17 @@ export default function SessionsPage() {
 
               {/* Meta */}
               <div className="text-muted mb-1">
-                {sess.datum} · {sess.session_beers?.length || 0} bier(en) · {sess.session_participants?.length || 0} proever(s)
-                {sess.admin && <> · Admin: {sess.admin.username}</>}
+                {(() => {
+                  const sessFormsList = formsMap[sess.id] || []
+                  const uniqueBeoordelaars = new Set(sessFormsList.map(f => f.user_id)).size
+                  return (
+                    <>
+                      {sess.datum} · {sess.session_beers?.length || 0} bier(en) · {sess.session_participants?.length || 0} aangemeld
+                      {uniqueBeoordelaars > 0 && ` · ${uniqueBeoordelaars} beoordeeld`}
+                      {sess.admin && <> · Admin: {sess.admin.username}</>}
+                    </>
+                  )
+                })()}
               </div>
               {sess.beschrijving && <p style={{ fontSize: '0.85rem', marginBottom: 8, color: '#5a4628' }}>{sess.beschrijving}</p>}
 
