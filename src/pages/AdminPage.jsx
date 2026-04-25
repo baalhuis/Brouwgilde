@@ -16,7 +16,7 @@ export default function AdminPage() {
     try {
       const [u, b, s] = await Promise.all([getAllProfiles(), getBeers(), getSessions()])
       setUsers(u)
-      setStats({ users: u.length, beers: b.length, sessions: s.length, forms: s.reduce((t, x) => t + (x.session_beers?.length || 0), 0) })
+      setStats({ users: u.length, beers: b.length, sessions: s.length })
     } finally { setLoading(false) }
   }
 
@@ -37,6 +37,11 @@ export default function AdminPage() {
     ? ['brouwer', 'admin', 'superuser']
     : ['brouwer', 'admin']
 
+  const roleBadge = (role) => {
+    const cls = role === 'superuser' ? 'badge-red' : role === 'admin' ? 'badge-copper' : 'badge-hop'
+    return <span className={`badge ${cls}`}>{role}</span>
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -46,19 +51,16 @@ export default function AdminPage() {
 
       {error && <Alert type="error">{error}</Alert>}
 
+      {/* Stats */}
       {stats && (
         <>
           <SectionTitle>Statistieken</SectionTitle>
-          <div className="form-row-3 mb-3">
-            {[
-              ['👤', stats.users, 'Gebruikers'],
-              ['🍺', stats.beers, 'Bieren'],
-              ['🎯', stats.sessions, 'Sessies'],
-            ].map(([icon, num, label]) => (
-              <div key={label} className="card" style={{ textAlign: 'center', padding: 16 }}>
-                <div style={{ fontSize: '1.8rem' }}>{icon}</div>
-                <div style={{ fontSize: '1.8rem', fontFamily: "'Playfair Display', serif", color: 'var(--amber-dark)', fontWeight: 700 }}>{num}</div>
-                <div className="text-muted">{label}</div>
+          <div className="stats-grid mb-3">
+            {[['👤', stats.users, 'Gebruikers'], ['🍺', stats.beers, 'Bieren'], ['🎯', stats.sessions, 'Sessies']].map(([icon, num, label]) => (
+              <div key={label} className="stat-card">
+                <div style={{ fontSize: '1.6rem' }}>{icon}</div>
+                <div className="stat-number">{num}</div>
+                <div className="stat-label">{label}</div>
               </div>
             ))}
           </div>
@@ -66,14 +68,16 @@ export default function AdminPage() {
       )}
 
       <SectionTitle>Gebruikers</SectionTitle>
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+
+      {/* Desktop tabel */}
+      <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="table">
           <thead>
             <tr>
               <th>Gebruikersnaam</th>
               <th>Brouwerij</th>
-              <th>Huidige rol</th>
-              <th>Rol wijzigen</th>
+              <th>Rol</th>
+              <th>Wijzigen</th>
             </tr>
           </thead>
           <tbody>
@@ -84,25 +88,16 @@ export default function AdminPage() {
                   {u.id === profile.id && <span className="badge badge-amber" style={{ marginLeft: 6 }}>Jij</span>}
                 </td>
                 <td>{u.brewery_name || <span className="text-muted">—</span>}</td>
+                <td>{roleBadge(u.role)}</td>
                 <td>
-                  <span className={`badge ${u.role === 'superuser' ? 'badge-red' : u.role === 'admin' ? 'badge-copper' : 'badge-hop'}`}>
-                    {u.role}
-                  </span>
-                </td>
-                <td>
-                  {u.id !== profile.id || profile.role === 'superuser' ? (
-                    <select
-                      className="form-select"
-                      style={{ padding: '4px 8px', fontSize: '0.82rem', width: 'auto' }}
+                  {(u.id !== profile.id || profile.role === 'superuser') ? (
+                    <select className="form-select" style={{ padding: '4px 8px', fontSize: '0.82rem', width: 'auto' }}
                       value={u.role}
                       disabled={saving === u.id || (u.role === 'superuser' && profile.role !== 'superuser')}
-                      onChange={e => changeRole(u.id, e.target.value)}
-                    >
+                      onChange={e => changeRole(u.id, e.target.value)}>
                       {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
-                  ) : (
-                    <span className="text-muted" style={{ fontSize: '0.82rem' }}>Eigen account</span>
-                  )}
+                  ) : <span className="text-muted" style={{ fontSize: '0.82rem' }}>Eigen account</span>}
                 </td>
               </tr>
             ))}
@@ -110,11 +105,38 @@ export default function AdminPage() {
         </table>
       </div>
 
-      <div className="alert alert-info mt-2" style={{ fontSize: '0.85rem' }}>
-        <strong>Rollen uitleg:</strong><br />
-        <strong>brouwer</strong> — kan bieren toevoegen en beoordelingen invullen<br />
-        <strong>admin</strong> — kan ook proefsessies aanmaken en beheren<br />
-        <strong>superuser</strong> — volledige toegang, kan altijd alles bewerken
+      {/* Mobiele kaarten */}
+      <div className="mobile-only">
+        {users.map(u => (
+          <div key={u.id} className="admin-user-card">
+            <div className="admin-user-header">
+              <div>
+                <div className="admin-user-name">
+                  {u.username}
+                  {u.id === profile.id && <span className="badge badge-amber" style={{ marginLeft: 6 }}>Jij</span>}
+                </div>
+                <div className="admin-user-brewery">{u.brewery_name || <span className="text-muted">Geen brouwerij</span>}</div>
+              </div>
+              {roleBadge(u.role)}
+            </div>
+            {(u.id !== profile.id || profile.role === 'superuser') && !(u.role === 'superuser' && profile.role !== 'superuser') && (
+              <div className="admin-user-role-select">
+                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Rol wijzigen</label>
+                <select className="form-select" value={u.role}
+                  disabled={saving === u.id}
+                  onChange={e => changeRole(u.id, e.target.value)}>
+                  {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="alert alert-info mt-2" style={{ fontSize: '0.85rem', lineHeight: 1.6 }}>
+        <div><strong>brouwer</strong> — bieren toevoegen en beoordelingen invullen</div>
+        <div><strong>admin</strong> — ook proefsessies aanmaken en beheren</div>
+        <div><strong>superuser</strong> — volledige toegang, altijd alles bewerken</div>
       </div>
     </div>
   )

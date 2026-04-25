@@ -325,25 +325,27 @@ export default function SessionsPage() {
           return (
             <div key={sess.id} className="card mb-2">
               {/* Header */}
-              <div className="flex-between mb-1">
-                <div>
-                  <h3 className="card-title" style={{ display: 'inline' }}>{sess.naam}</h3>
-                  {sess.closed
-                    ? <span className="tag-closed">Gesloten</span>
-                    : <span className="tag-open">Open</span>}
-                  <span className="badge badge-copper" style={{ marginLeft: 8 }}>
+              <div className="session-header">
+                <div className="session-header-top">
+                  <div className="session-title-row">
+                    <h3 className="card-title" style={{ display: 'inline', marginRight: 4 }}>{sess.naam}</h3>
+                    {sess.closed
+                      ? <span className="tag-closed">Gesloten</span>
+                      : <span className="tag-open">Open</span>}
+                  </div>
+                  <span className="badge badge-copper">
                     {sess.type === 'kampioenschap' ? '🏆 Kampioenschap' : '🔄 Beerswap'}
                   </span>
                 </div>
-                <div className="flex-gap">
+                <div className="session-actions">
                   {sessAdmin && (
                     <button className="btn btn-ghost btn-sm" onClick={() => setBeersModal({ session: sess })}>
-                      🍺 Bieren beheren
+                      🍺 Bieren
                     </button>
                   )}
                   {sessAdmin && (
                     <button className="btn btn-ghost btn-sm" onClick={() => setSessionModal({ session: sess })}>
-                      ⚙️ Instellingen
+                      ⚙️
                     </button>
                   )}
                   <button className="btn btn-secondary btn-sm" onClick={() => setLeaderModal({ session: sess })}>
@@ -373,34 +375,38 @@ export default function SessionsPage() {
                 <>
                   <hr className="divider" />
                   <SectionTitle>{sess.type === 'kampioenschap' ? 'Jouw toegewezen bieren' : 'Bieren om te beoordelen'}</SectionTitle>
-                  <div className="card-grid">
+                  <div className="tasting-grid">
                     {beerList.map(beer => {
                       const myForm = getMyForm(sess, beer.id)
                       const sbEntry = sess.session_beers?.find(sb => sb.beer_id === beer.id)
                       const isChamp = sess.type === 'kampioenschap'
+                      const scored = !!myForm
                       return (
-                        <div key={beer.id} className="card" style={{ padding: 14, cursor: 'pointer' }}
+                        <div key={beer.id}
+                          className={`tasting-card ${scored ? 'tasting-card--scored' : ''}`}
                           onClick={() => setTastingModal({ session: sess, beer, existingForm: myForm, readOnly })}>
-                          <div className="card-title" style={{ fontSize: '0.95rem' }}>
-                            {isChamp
-                              ? <span className="champagne-id">{sbEntry?.identifier || '???'}</span>
-                              : beer.naam}
-                          </div>
-                          <div className="card-meta">
-                            {isChamp ? beer.biertype : `${beer.brouwerij} · ${beer.biertype}`}
-                          </div>
-                          {myForm ? (
-                            <div className="flex-gap">
-                              <span style={{ fontFamily: "'Playfair Display', serif", fontSize: '1.3rem', color: 'var(--amber-dark)', fontWeight: 700 }}>
-                                {Number(myForm.score).toFixed(2)}
-                              </span>
-                              <span className="badge badge-hop">✓ Beoordeeld</span>
+                          <div className="tasting-card-main">
+                            <div className="tasting-card-name">
+                              {isChamp
+                                ? <span className="champagne-id">{sbEntry?.identifier || '???'}</span>
+                                : beer.naam}
                             </div>
-                          ) : (
-                            <span className="badge badge-muted">
-                              {readOnly ? '🔒 Gesloten' : '— Nog te beoordelen'}
-                            </span>
-                          )}
+                            <div className="tasting-card-meta">
+                              {isChamp ? beer.biertype : `${beer.brouwerij} · ${beer.biertype}`}
+                            </div>
+                          </div>
+                          <div className="tasting-card-status">
+                            {scored ? (
+                              <>
+                                <span className="tasting-score">{Number(myForm.score).toFixed(2)}</span>
+                                <span className="badge badge-hop" style={{ fontSize: '0.65rem' }}>✓ Klaar</span>
+                              </>
+                            ) : (
+                              <span className="badge badge-muted" style={{ fontSize: '0.7rem' }}>
+                                {readOnly ? '🔒' : '→ Beoordeel'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       )
                     })}

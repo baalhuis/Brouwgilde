@@ -1133,3 +1133,276 @@ h1, h2, h3, h4 {
   color: var(--text);
   font-style: italic;
 }
+
+/* ═══════════════════════════════════════════════════
+   STATS GRID — responsive
+   ═══════════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .stat-card { padding: 14px 8px; }
+  .stat-number { font-size: 1.8rem; }
+}
+
+/* ═══════════════════════════════════════════════════
+   SESSION HEADER — responsive
+   ═══════════════════════════════════════════════════ */
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.session-header-top {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.session-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.session-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .session-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .session-actions {
+    width: 100%;
+  }
+  .session-actions .btn {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   TASTING CARDS — bieren om te beoordelen
+   ═══════════════════════════════════════════════════ */
+.tasting-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.tasting-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 64px;
+}
+
+.tasting-card:hover {
+  border-color: var(--green);
+  background: var(--green-faint);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.tasting-card:active { transform: translateY(0); }
+
+.tasting-card--scored {
+  border-color: var(--green);
+  background: var(--green-pale);
+}
+
+.tasting-card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.tasting-card-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tasting-card-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tasting-card-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tasting-score {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--green-dark);
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .tasting-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .tasting-card {
+    padding: 14px;
+    min-height: 56px;
+  }
+  .tasting-card-name { font-size: 0.95rem; white-space: normal; }
+}
+
+/* ═══════════════════════════════════════════════════
+   ADMIN USER CARDS — mobiel
+   ═══════════════════════════════════════════════════ */
+.admin-user-card {
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.admin-user-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.admin-user-brewery {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.admin-user-role-select .form-select {
+  font-size: 0.9rem;
+  padding: 8px 12px;
+}
+
+/* ═══════════════════════════════════════════════════
+   GLOBAL MOBILE FIXES
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Page header — knop altijd onder de titel */
+  .page-header.flex-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .page-header.flex-between .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Filter bar — inputs volle breedte */
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-bar .form-input,
+  .filter-bar .form-select {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Cards: geen horizontale overflow */
+  .card { overflow: visible; }
+
+  /* Dividers compacter */
+  .divider { margin: 12px 0; }
+
+  /* Section titles kleiner */
+  .section-title { font-size: 0.92rem; }
+
+  /* Join/leave knoppen volle breedte */
+  .flex-gap.mb-2 .btn { flex: 1; justify-content: center; }
+
+  /* Alert tekst kleiner */
+  .alert { font-size: 0.84rem; }
+
+  /* mb klasses compacter */
+  .mb-2 { margin-bottom: 12px; }
+  .mb-3 { margin-bottom: 16px; }
+
+  /* Modal: scroll goed */
+  .modal {
+    padding: 20px 18px;
+  }
+  .modal-title { font-size: 1.2rem; }
+
+  /* Score sliders compacter */
+  .score-row { padding: 6px 8px; }
+  .score-label { width: 70px; font-size: 0.8rem; }
+  .score-weight { width: 22px; font-size: 0.68rem; }
+
+  /* Leaderboard compacter */
+  .lb-row { padding: 10px 12px; gap: 10px; }
+  .lb-rank { font-size: 1.2rem; width: 28px; }
+  .lb-score { font-size: 1.4rem; }
+  .lb-name { font-size: 0.88rem; }
+  .lb-meta { font-size: 0.72rem; }
+
+  /* Champagne ID kleiner */
+  .champagne-id { font-size: 0.78rem; padding: 2px 6px; }
+
+  /* Geen min-width op tabellen meer nodig want we tonen kaarten */
+  .table { min-width: unset; }
+
+  /* form-row-3 op mobiel: 2 kolommen ipv 1 voor kleine velden */
+  .form-row-3 { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 400px) {
+  .form-row-3 { grid-template-columns: 1fr; }
+  .score-label { width: 64px; }
+}
