@@ -134,6 +134,11 @@ export async function createSession(session) {
   return data
 }
 
+export async function deleteSession(id) {
+  const { error } = await supabase.from('sessions').delete().eq('id', id)
+  if (error) throw error
+}
+
 export async function updateSession(id, updates) {
   const { data, error } = await supabase
     .from('sessions')

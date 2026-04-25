@@ -1807,3 +1807,15 @@ body {
     font-size: 0.65rem;
   }
 }
+
+.session-btn--danger {
+  background: var(--error-bg);
+  border-color: rgba(192,57,43,0.3);
+  color: var(--error);
+}
+
+.session-btn--danger:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: white;
+}

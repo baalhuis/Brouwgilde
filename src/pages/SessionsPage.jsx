@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useRole } from '../lib/AuthContext'
 import {
-  getSessions, createSession, updateSession,
+  getSessions, createSession, updateSession, deleteSession,
   addBeerToSession, removeBeerFromSession, updateBeerIdentifier,
   joinSession, leaveSession, setAssignment, getAssignments,
   getAllProfiles, getBeers, getForms,
@@ -272,6 +272,12 @@ export default function SessionsPage() {
     load()
   }
 
+  async function handleDeleteSession(sess) {
+    if (!confirm(`Sessie "${sess.naam}" verwijderen? Dit verwijdert ook alle bierformulieren van deze sessie.`)) return
+    await deleteSession(sess.id)
+    load()
+  }
+
   function isParticipant(sess) {
     return sess.session_participants?.some(p => p.user_id === profile.id)
   }
@@ -354,6 +360,12 @@ export default function SessionsPage() {
                     <span className="session-btn-icon">📊</span>
                     <span className="session-btn-label">Leaderboard</span>
                   </button>
+                  {isSuperuser && (
+                    <button className="session-btn session-btn--danger" onClick={() => handleDeleteSession(sess)}>
+                      <span className="session-btn-icon">🗑</span>
+                      <span className="session-btn-label">Verwijderen</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
