@@ -184,3 +184,33 @@ export const BKG_GROUPS = [
 ]
 
 export const CATEGORIES = ['A', 'B', 'C', 'D', 'V']
+
+export const BIERTYPE_CATEGORIE = {
+  'American Pale Ale': 'A', 'Berliner Weisse': 'A', 'Bitter Blond': 'A',
+  'Brettanomyces Blond': 'A', 'California Steam': 'A', 'Dortmunder Export': 'A',
+  'Faro': 'A', 'Gose': 'A', 'Irish Red Ale': 'A', 'Kölsch': 'A', 'Kuit': 'A',
+  'Münchener Helles': 'A', 'New England IPA (NEIPA)': 'A', 'Oktoberfest': 'A',
+  'Ordinary & Best Bitter': 'A', 'Oude Geuze Lambiek': 'A', 'Pale Ale (GB)': 'A',
+  'Pilsener': 'A', 'Pilsener (Urtyp)': 'A', 'Saison': 'A',
+  'Session India Pale Ale': 'A', 'Speciale Belge (Belgische Pale Ale)': 'A',
+  'Weizen': 'A', 'Witbier': 'A',
+  'Alt': 'B', 'American Amber-Red': 'B', 'Bohemian / Czech Dark Lager': 'B',
+  'Brown Ale': 'B', 'Dunkelweizen': 'B', 'Fruit / Framboise Lambiek': 'B',
+  'Irish Dry Stout': 'B', 'Kriek Lambiek (Oude)': 'B', 'Mild Ale (Dark)': 'B',
+  'Milk (Sweet) Stout': 'B', 'Münchener Dunkles': 'B', 'Oatmeal Stout': 'B',
+  'Oud Bruin (NL)': 'B', 'Porter': 'B', 'Schwarzbier': 'B',
+  'Vlaams (Oud) Bruin': 'B', 'Vlaams Rood': 'B',
+  'Barley Wine Engels & Amerikaans': 'C', 'Blond(e)': 'C',
+  'Brut (Méthode Champenoise)': 'C', 'Dortmunder Strong': 'C',
+  'Double / Imperial IPA': 'C', 'India Pale Ale (GB)': 'C',
+  'India Pale Ale (USA)': 'C', 'Lichte Dubbelbo(c)k': 'C', 'Meibo(c)k': 'C',
+  'Sterk (Dubbel) Witbier': 'C', 'Sterke Blonde': 'C', 'Sterke Saison': 'C',
+  'Tripel': 'C', 'Weizenbock (Hell)': 'C',
+  'Baltic Porter': 'D', 'Barley Wine (Klasse D)': 'D',
+  'Bière de Garde (Ambrée)': 'D', 'Black IPA (BIPA)': 'D', 'Bo(c)kbier': 'D',
+  'Dubbel': 'D', 'Dubbelbock': 'D', 'Export Stout': 'D', 'Imperial Red Ale': 'D',
+  'Old Ale': 'D', 'Quadrupel': 'D', 'Russian Imperial Stout': 'D',
+  'Scotch Ale': 'D', 'Sterke Vlaamse Bruine': 'D', 'Weizen(doppel)bock': 'D',
+  'Vrije Klasse': 'V',
+}
+

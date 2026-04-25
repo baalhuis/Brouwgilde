@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useRole } from '../lib/AuthContext'
 import { getBeers, createBeer, updateBeer, deleteBeer, getAllProfiles } from '../lib/supabase'
-import { Modal, Alert, EmptyState, Spinner, BKG_GROUPS, CATEGORIES } from '../components/UI'
+import { Modal, Alert, EmptyState, Spinner, BKG_GROUPS, CATEGORIES, BIERTYPE_CATEGORIE } from '../components/UI'
 
 // ── Beer form modal ────────────────────────────────────────────
 function BeerModal({ beer, onSave, onClose, profiles }) {
@@ -35,6 +35,7 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
     e.preventDefault(); setError('')
     const breweryOk = isAdmin ? !!form.ownerId : !!form.brouwerij
     if (!form.naam || !form.biertype || !breweryOk || form.ebc === '' || form.ibu === '' || form.abv === '') {
+      // categorie wordt automatisch ingevuld via biertype
       setError('Vul alle verplichte velden in.'); return
     }
     setLoading(true)
@@ -76,17 +77,36 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
           </div>
         )}
 
-        <div className="form-row">
+        {form.categorie && (
           <div className="form-group">
-            <label className="form-label">Categorie <span className="req">*</span></label>
-            <select className="form-select" value={form.categorie} onChange={e => set('categorie', e.target.value)}>
-              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-            </select>
+            <label className="form-label">Categorie (automatisch)</label>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '9px 13px', borderRadius: 8,
+              background: 'var(--surface)', border: '1.5px solid var(--border-light)',
+              color: 'var(--text-muted)', fontSize: '0.9rem'
+            }}>
+              <span className="badge badge-amber" style={{ fontSize: '0.9rem', padding: '4px 12px' }}>
+                Klasse {form.categorie}
+              </span>
+              <span style={{ fontSize: '0.82rem' }}>
+                {form.categorie === 'A' && 'Licht van kleur, begin SG < 1060'}
+                {form.categorie === 'B' && 'Donker van kleur, begin SG < 1060'}
+                {form.categorie === 'C' && 'Licht van kleur, begin SG ≥ 1060'}
+                {form.categorie === 'D' && 'Donker van kleur, begin SG ≥ 1060'}
+                {form.categorie === 'V' && 'Vrije klasse'}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
         <div className="form-group">
           <label className="form-label">Biertype <span className="req">*</span></label>
-          <select className="form-select" value={form.biertype} onChange={e => set('biertype', e.target.value)}>
+          <select className="form-select" value={form.biertype} onChange={e => {
+              const type = e.target.value
+              set('biertype', type)
+              // Categorie automatisch instellen op basis van BKG-indeling
+              if (BIERTYPE_CATEGORIE[type]) set('categorie', BIERTYPE_CATEGORIE[type])
+            }}>
             <option value="">— selecteer BKG biertype —</option>
             {BKG_GROUPS.map(g => (
               <optgroup key={g.label} label={g.label}>
