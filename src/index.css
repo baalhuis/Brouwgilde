@@ -1735,7 +1735,7 @@ body {
 .session-actions {
   display: flex;
   gap: 8px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .session-btn {
@@ -1759,7 +1759,7 @@ body {
 .session-btn:hover {
   background: var(--green-pale);
   border-color: var(--green);
-  color: var(--green-darker);
+  color: var(--green-deeper);
 }
 
 .session-btn:active {
@@ -1790,17 +1790,19 @@ body {
   color: inherit;
 }
 
-/* Op mobiel: knoppen vullen de volle breedte gelijkmatig */
+/* Op mobiel: knoppen in een 2-kolommen grid */
 @media (max-width: 768px) {
   .session-actions {
-    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
+    width: 100%;
   }
 
   .session-btn {
-    flex: 1;
     min-width: 0;
     padding: 10px 6px;
+    width: 100%;
   }
 
   .session-btn-label {
