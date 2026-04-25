@@ -262,7 +262,7 @@ export async function getForms(sessionId) {
 export async function getMyForms(userId) {
   const { data, error } = await supabase
     .from('tasting_forms')
-    .select(`*, beer:beers(naam, biertype, brouwerij), session:sessions(naam, type)`)
+    .select(`*, beer:beers(id, naam, biertype, brouwerij), session:sessions(naam, type, closed, edit_locked)`)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
   if (error) throw error

@@ -126,7 +126,7 @@ export default function TastingFormModal({ beer, session, existingForm, readOnly
                 if (!confirm('Beoordeling resetten naar niet beoordeeld?')) return
                 setLoading(true)
                 try {
-                  await deleteForm(session.id, beer.id, profile.id)
+                  await deleteForm(session.id, beer.id || existingForm.beer_id, profile.id || existingForm.user_id)
                   onDone?.()
                   onClose()
                 } catch (err) {
