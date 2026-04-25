@@ -385,7 +385,7 @@ export default function SessionsPage() {
                 </div>
               )}
 
-              {/* Beer cards to rate */}
+              {/* Beer cards to rate — alleen tonen als aangemeld of admin */}
               {(joined || sessAdmin) && beerList.length > 0 && (
                 <>
                   <hr className="divider" />
@@ -396,10 +396,12 @@ export default function SessionsPage() {
                       const sbEntry = sess.session_beers?.find(sb => sb.beer_id === beer.id)
                       const isChamp = sess.type === 'kampioenschap'
                       const scored = !!myForm
+                      // Niet-aangemelde gebruikers mogen nooit een nieuw formulier invullen
+                      const cardReadOnly = readOnly || (!joined && !sessAdmin)
                       return (
                         <div key={beer.id}
                           className={`tasting-card ${scored ? 'tasting-card--scored' : ''}`}
-                          onClick={() => setTastingModal({ session: sess, beer, existingForm: myForm, readOnly })}>
+                          onClick={() => setTastingModal({ session: sess, beer, existingForm: myForm, readOnly: cardReadOnly })}>
                           <div className="tasting-card-main">
                             <div className="tasting-card-name">
                               {isChamp
@@ -418,7 +420,7 @@ export default function SessionsPage() {
                               </>
                             ) : (
                               <span className="badge badge-muted" style={{ fontSize: '0.7rem' }}>
-                                {readOnly ? '🔒' : '→ Beoordeel'}
+                                {cardReadOnly ? '🔒' : '→ Beoordeel'}
                               </span>
                             )}
                           </div>
@@ -427,6 +429,13 @@ export default function SessionsPage() {
                     })}
                   </div>
                 </>
+              )}
+
+              {/* Niet aangemeld maar wel read-only toegang */}
+              {!joined && !sessAdmin && beerList.length > 0 && (
+                <div className="alert alert-info" style={{ marginTop: 8 }}>
+                  Meld je aan als proever om bieren te beoordelen.
+                </div>
               )}
 
               {(joined || sessAdmin) && beerList.length === 0 && (
