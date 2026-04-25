@@ -7,7 +7,7 @@ import { Modal, Alert, EmptyState, Spinner, BKG_GROUPS, CATEGORIES } from '../co
 // ── Beer form modal ────────────────────────────────────────────
 function BeerModal({ beer, onSave, onClose, profiles }) {
   const { profile } = useAuth()
-  const { isSuperuser } = useRole()
+  const { isSuperuser, isAdmin } = useRole()
   const [form, setForm] = useState(beer ? {
     naam: beer.naam, categorie: beer.categorie, biertype: beer.biertype,
     brouwerij: beer.brouwerij, beschrijving: beer.beschrijving || '',
@@ -15,7 +15,8 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
     untappd_url: beer.untappd_url || '', brewfather_url: beer.brewfather_url || '',
     ownerId: beer.owner_id || profile?.id,
   } : {
-    naam: '', categorie: 'A', biertype: '', brouwerij: profile?.brewery_name || '',
+    naam: '', categorie: 'A', biertype: profile?.brewery_name || '',
+    brouwerij: profile?.brewery_name || '',
     beschrijving: '', ebc: '', ibu: '', abv: '', untappd_url: '', brewfather_url: '',
     ownerId: profile?.id,
   })
@@ -32,7 +33,8 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
 
   async function handleSave(e) {
     e.preventDefault(); setError('')
-    if (!form.naam || !form.biertype || !form.brouwerij || form.ebc === '' || form.ibu === '' || form.abv === '') {
+    const breweryOk = isAdmin ? !!form.ownerId : !!form.brouwerij
+    if (!form.naam || !form.biertype || !breweryOk || form.ebc === '' || form.ibu === '' || form.abv === '') {
       setError('Vul alle verplichte velden in.'); return
     }
     setLoading(true)
@@ -50,21 +52,27 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
           <input className="form-input" value={form.naam} onChange={e => set('naam', e.target.value)} />
         </div>
 
-        {/* Superuser: namens welke brouwer */}
-        {isSuperuser && profiles && (
+        {/* Admin/superuser: namens welke brouwer aanmaken */}
+        {isAdmin && profiles?.length > 0 && (
           <div className="form-group">
-            <label className="form-label">Aanmaken namens brouwer <span className="req">*</span></label>
+            <label className="form-label">Brouwerij <span className="req">*</span></label>
             <select className="form-select" value={form.ownerId || ''} onChange={e => handleOwnerChange(e.target.value)}>
-              <option value="">— selecteer brouwer —</option>
+              <option value="">— selecteer brouwerij —</option>
               {profiles.filter(p => p.brewery_name).map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.username} — {p.brewery_name}
+                  {p.brewery_name} ({p.username})
                 </option>
               ))}
             </select>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
-              De brouwerijnaam wordt automatisch ingevuld maar kan nog worden aangepast.
-            </div>
+          </div>
+        )}
+
+        {/* Normale brouwer: eigen brouwerij als read-only label */}
+        {!isAdmin && (
+          <div className="form-group">
+            <label className="form-label">Brouwerij</label>
+            <input className="form-input" value={form.brouwerij} disabled
+              style={{ background: 'var(--surface)', color: 'var(--text-muted)', cursor: 'not-allowed' }} />
           </div>
         )}
 
@@ -74,10 +82,6 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
             <select className="form-select" value={form.categorie} onChange={e => set('categorie', e.target.value)}>
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label">Brouwerij <span className="req">*</span></label>
-            <input className="form-input" value={form.brouwerij} onChange={e => set('brouwerij', e.target.value)} />
           </div>
         </div>
         <div className="form-group">
@@ -203,7 +207,7 @@ export default function BeersPage() {
     try {
       const [data, profileData] = await Promise.all([
         getBeers(),
-        isSuperuser ? getAllProfiles() : Promise.resolve([]),
+        isAdmin ? getAllProfiles() : Promise.resolve([]),
       ])
       setBeers(data ?? [])
       setProfiles(profileData ?? [])
@@ -221,7 +225,7 @@ export default function BeersPage() {
 
   async function handleSave(form) {
     // Superuser kan namens een andere brouwer aanmaken via form.ownerId
-    const ownerId = (isSuperuser && form.ownerId) ? form.ownerId : profile.id
+    const ownerId = form.ownerId || profile.id
     if (modal.beer) {
       await updateBeer(modal.beer.id, { ...form, owner_id: ownerId })
     } else {
