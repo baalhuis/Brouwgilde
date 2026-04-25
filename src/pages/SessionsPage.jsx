@@ -103,7 +103,13 @@ function ManageBeersModal({ session, allBeers, onClose, onUpdate }) {
   }, [])
 
   async function handleAddBeer(beerId) {
-    const identifier = isChamp ? 'ID-' + Math.random().toString(36).slice(2, 6).toUpperCase() : null
+    let identifier = null
+    if (isChamp) {
+      // Volgende oplopende nummer op basis van al bestaande bieren in de sessie
+      const existing = localSession.session_beers || []
+      const nextNum = existing.length + 1
+      identifier = 'ID-' + String(nextNum).padStart(3, '0')
+    }
     await addBeerToSession(session.id, beerId, identifier)
     await refresh()
   }
