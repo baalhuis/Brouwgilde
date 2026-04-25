@@ -230,7 +230,7 @@ export default function SessionsPage() {
   const [tastingModal, setTastingModal] = useState(null)
   const [leaderModal, setLeaderModal] = useState(null)
   const [scoresModal, setScoresModal] = useState(null)
-  const [showClosed, setShowClosed] = useState(false)
+  const [showClosed, setShowClosed] = useState(true)
 
   async function load() {
     setLoading(true)
