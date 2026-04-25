@@ -842,7 +842,6 @@ h1, h2, h3, h4 {
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
   .card-grid { grid-template-columns: 1fr; }
   .card { overflow-x: auto; }
-  .table { min-width: 500px; }
   .btn { padding: 10px 16px; min-height: 42px; }
   .btn-sm { padding: 8px 12px; min-height: 34px; }
   .filter-bar .form-input,
@@ -1433,7 +1432,6 @@ h1, h2, h3, h4 {
   .champagne-id { font-size: 0.78rem; padding: 2px 6px; }
 
   /* Geen min-width op tabellen meer nodig want we tonen kaarten */
-  .table { min-width: unset; }
 
   /* form-row-3 op mobiel: 2 kolommen ipv 1 voor kleine velden */
   .form-row-3 { grid-template-columns: 1fr 1fr; }
@@ -1638,21 +1636,11 @@ body {
   max-width: calc(100vw - 24px);
 }
 
-/* Tabellen: altijd scrollen binnen container, nooit pagina uitrekken */
+/* Tabellen: altijd 100% breed, nooit vaste minimumbreedte */
 .card .table,
 .desktop-only .table {
-  display: block;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  width: 100%;
   max-width: 100%;
-}
-
-/* Card die een tabel bevat: overflow-x scroll zodat tabel niet pagina uitrekt */
-.card-table-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  margin: 0 -22px; /* negatieve margin zodat scrollbar tot kaartrand gaat */
-  padding: 0 22px;
 }
 
 /* Inputs en selects nooit breder dan container */
@@ -1864,8 +1852,6 @@ body {
   .hide-tablet { display: none !important; }
 
   /* Tabellen: geen min-width, scrollen als nodig */
-  .table { min-width: unset; }
-  .desktop-only { overflow-x: auto; }
 
   /* Stats 2x2 */
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1885,4 +1871,52 @@ body {
 
 @media (min-width: 901px) and (max-width: 1180px) {
   .hide-tablet-inverse { display: block; }
+}
+
+/* ═══════════════════════════════════════════════════
+   FLUID TABLE — past zich aan aan elk schermformaat
+   ═══════════════════════════════════════════════════ */
+
+.fluid-table {
+  table-layout: fixed;   /* kolommen schalen mee met colgroup % */
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Cellen kappen lange tekst af met ellipsis */
+.fluid-table td,
+.fluid-table th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Maar badges mogen wel wrappen */
+.fluid-table td .badge {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Helper voor tekst truncation in cellen */
+.cell-truncate {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Zorg dat de card zelf nooit overflow toont */
+.card.desktop-only,
+.desktop-only.card {
+  overflow: hidden;
+}
+
+/* Verwijder alle vaste table min-widths */
+.table {
+  min-width: unset !important;
 }

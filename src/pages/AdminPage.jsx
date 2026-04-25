@@ -70,9 +70,8 @@ export default function AdminPage() {
       <SectionTitle>Gebruikers</SectionTitle>
 
       {/* Desktop tabel */}
-      <div className="card desktop-only" style={{ padding: 0 }}>
-        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <table className="table" style={{ minWidth: 500 }}>
+      <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
+        <table className="table fluid-table">
           <thead>
             <tr>
               <th>Gebruikersnaam</th>
@@ -104,7 +103,6 @@ export default function AdminPage() {
             ))}
           </tbody>
         </table>
-        </div>
       </div>
 
       {/* Mobiele kaarten */}

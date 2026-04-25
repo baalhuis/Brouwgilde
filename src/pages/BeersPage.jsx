@@ -247,9 +247,19 @@ export default function BeersPage() {
       ) : (
         <>
           {/* ── Desktop tabel ── */}
-          <div className="card desktop-only" style={{ padding: 0 }}>
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table className="table" style={{ minWidth: 640 }}>
+          <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
+            <table className="table fluid-table">
+              <colgroup>
+                <col style={{ width: '22%' }} />  {/* Naam */}
+                <col className="hide-tablet" style={{ width: '16%' }} />  {/* Brouwerij */}
+                <col style={{ width: '26%' }} />  {/* Type */}
+                <col style={{ width: '8%' }} />   {/* Cat */}
+                <col style={{ width: '8%' }} />   {/* ABV */}
+                <col className="hide-tablet" style={{ width: '7%' }} />  {/* EBC */}
+                <col className="hide-tablet" style={{ width: '7%' }} />  {/* IBU */}
+                <col className="hide-tablet" style={{ width: '14%' }} /> {/* Links */}
+                <col style={{ width: '6%' }} />   {/* Acties */}
+              </colgroup>
               <thead>
                 <tr>
                   <th>Naam</th>
@@ -267,11 +277,11 @@ export default function BeersPage() {
                 {filtered.map(b => (
                   <tr key={b.id}>
                     <td>
-                      <strong>{b.naam}</strong>
+                      <strong className="cell-truncate">{b.naam}</strong>
                       <div className="text-muted hide-tablet-inverse" style={{ fontSize: '0.75rem', marginTop: 2 }}>{b.brouwerij}</div>
                     </td>
-                    <td className="hide-tablet">{b.brouwerij}</td>
-                    <td><span className="badge badge-muted">{b.biertype}</span></td>
+                    <td className="hide-tablet"><span className="cell-truncate">{b.brouwerij}</span></td>
+                    <td><span className="badge badge-muted cell-truncate">{b.biertype}</span></td>
                     <td><span className="badge badge-hop">Cat. {b.categorie}</span></td>
                     <td>{b.abv}%</td>
                     <td className="hide-tablet">{b.ebc}</td>
@@ -292,7 +302,6 @@ export default function BeersPage() {
                 ))}
               </tbody>
             </table>
-            </div>
           </div>
 
           {/* ── Mobiele kaarten ── */}

@@ -55,9 +55,21 @@ export function MyFormsPage() {
       ) : (
         <>
           {/* ── Desktop tabel ── */}
-          <div className="card desktop-only" style={{ padding: 0 }}>
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table className="table" style={{ minWidth: 700 }}>
+          <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
+            <table className="table fluid-table">
+              <colgroup>
+                <col style={{ width: '22%' }} />  {/* Bier */}
+                <col className="hide-tablet" style={{ width: '18%' }} />  {/* Sessie */}
+                <col className="hide-tablet" style={{ width: '10%' }} />  {/* Type */}
+                <col className="hide-tablet" style={{ width: '6%' }} />   {/* Kleur */}
+                <col className="hide-tablet" style={{ width: '8%' }} />   {/* Koolzuur */}
+                <col className="hide-tablet" style={{ width: '6%' }} />   {/* Geur */}
+                <col className="hide-tablet" style={{ width: '7%' }} />   {/* Smaak */}
+                <col className="hide-tablet" style={{ width: '9%' }} />   {/* Nasmaak */}
+                <col style={{ width: '9%' }} />   {/* Score */}
+                <col className="hide-tablet" style={{ width: '10%' }} />  {/* Datum */}
+                <col style={{ width: '7%' }} />   {/* Actie */}
+              </colgroup>
               <thead>
                 <tr>
                   <th>Bier</th>
@@ -80,12 +92,12 @@ export function MyFormsPage() {
                   return (
                     <tr key={f.id}>
                       <td>
-                        <strong>{f.beer?.naam || '—'}</strong>
+                        <strong className="cell-truncate">{f.beer?.naam || '—'}</strong>
                         <div className="text-muted hide-tablet-inverse" style={{ fontSize: '0.75rem', marginTop: 2 }}>
                           {f.session?.naam || '—'} · {new Date(f.created_at).toLocaleDateString('nl-NL')}
                         </div>
                       </td>
-                      <td className="hide-tablet">{f.session?.naam || '—'}</td>
+                      <td className="hide-tablet"><span className="cell-truncate">{f.session?.naam || '—'}</span></td>
                       <td className="hide-tablet">{f.session && <span className="badge badge-amber">{f.session.type}</span>}</td>
                       <td className="hide-tablet">{f.kleur}</td>
                       <td className="hide-tablet">{f.koolzuur}</td>
@@ -104,7 +116,6 @@ export function MyFormsPage() {
                 })}
               </tbody>
             </table>
-            </div>
           </div>
 
           {/* ── Mobiele kaarten ── */}
@@ -245,8 +256,8 @@ export function MyBreweryPage() {
             {isExp && (
               <>
                 {/* Desktop tabel */}
-                <div className="desktop-only" style={{ marginTop: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                  <table className="table" style={{ minWidth: 620 }}>
+                <div className="desktop-only" style={{ marginTop: 12 }}>
+                  <table className="table fluid-table">
                     <thead>
                       <tr>
                         <th>Proever</th><th>Sessie</th>
