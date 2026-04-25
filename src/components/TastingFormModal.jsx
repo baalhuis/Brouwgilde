@@ -6,6 +6,8 @@ import { useAuth } from '../lib/AuthContext'
 export default function TastingFormModal({ beer, session, existingForm, readOnly, onDone, onClose }) {
   const { profile } = useAuth()
   const isChamp = session?.type === 'kampioenschap'
+  // Onthul echte naam als kampioenschap gesloten én vergrendeld is
+  const revealed = isChamp && session?.closed && session?.edit_locked
 
   // Find this beer's identifier in the session
   const sbEntry = session?.session_beers?.find(sb => sb.beer_id === beer.id)
@@ -62,10 +64,15 @@ export default function TastingFormModal({ beer, session, existingForm, readOnly
   }
 
   return (
-    <Modal title={`Proefformulier — ${isChamp ? (identifier || '???') : beer.naam}`} onClose={onClose}>
-      {isChamp && (
+    <Modal title={`Proefformulier — ${isChamp && !revealed ? (identifier || '???') : beer.naam}`} onClose={onClose}>
+      {isChamp && !revealed && (
         <div className="alert alert-info" style={{ marginBottom: 12 }}>
           🏆 Kampioenschap · Bier ID: <strong className="champagne-id">{identifier || '???'}</strong>
+        </div>
+      )}
+      {isChamp && revealed && (
+        <div className="alert alert-success" style={{ marginBottom: 12 }}>
+          🏆 Kampioenschap gesloten · ID: <strong className="champagne-id">{identifier}</strong> = <strong>{beer.naam}</strong> — {beer.brouwerij}
         </div>
       )}
 
@@ -75,7 +82,7 @@ export default function TastingFormModal({ beer, session, existingForm, readOnly
           <span className="text-muted" style={{ fontSize: '0.75rem' }}>Type</span>
           <br /><strong style={{ fontSize: '0.85rem' }}>{beer.biertype}</strong>
         </div>
-        {!isChamp && <>
+        {(!isChamp || revealed) && <>
           <div><span className="text-muted" style={{ fontSize: '0.75rem' }}>ABV</span><br /><strong>{beer.abv}%</strong></div>
           <div><span className="text-muted" style={{ fontSize: '0.75rem' }}>EBC</span><br /><strong>{beer.ebc}</strong></div>
           <div><span className="text-muted" style={{ fontSize: '0.75rem' }}>IBU</span><br /><strong>{beer.ibu}</strong></div>

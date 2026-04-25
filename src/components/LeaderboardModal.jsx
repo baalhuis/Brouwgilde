@@ -28,6 +28,7 @@ export default function LeaderboardModal({ session, onClose }) {
   }
 
   const isChamp = session.type === 'kampioenschap'
+  const revealed = isChamp && session.closed && session.edit_locked
   const beerTypes = data ? [...new Set(data.map(r => r.biertype))] : []
 
   const filtered = (data || []).filter(r => {
@@ -64,10 +65,13 @@ export default function LeaderboardModal({ session, onClose }) {
               <div className={`lb-rank ${rankColors[i] || ''}`}>{i + 1}</div>
               <div className="lb-info">
                 <div className="lb-name">
-                  {isChamp ? <span className="champagne-id">{getIdentifier(item.beer_id)}</span> : item.naam}
+                  {isChamp && !revealed
+                    ? <span className="champagne-id">{getIdentifier(item.beer_id)}</span>
+                    : item.naam}
                 </div>
                 <div className="lb-meta">
-                  {!isChamp && `${item.brouwerij} · `}
+                  {isChamp && revealed && <><span className="champagne-id" style={{ fontSize: '0.7rem', marginRight: 4 }}>{getIdentifier(item.beer_id)}</span></>}
+                  {(revealed || !isChamp) && `${item.brouwerij} · `}
                   {item.biertype} · cat. {item.categorie} · {item.num_reviews} beoordeling{item.num_reviews !== 1 ? 'en' : ''}
                 </div>
               </div>

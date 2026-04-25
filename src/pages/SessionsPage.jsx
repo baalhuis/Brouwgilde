@@ -398,18 +398,22 @@ export default function SessionsPage() {
                       const scored = !!myForm
                       // Niet-aangemelde gebruikers mogen nooit een nieuw formulier invullen
                       const cardReadOnly = readOnly || (!joined && !sessAdmin)
+                      // Onthul echte naam als kampioenschap gesloten én vergrendeld is
+                      const revealed = isChamp && sess.closed && sess.edit_locked
                       return (
                         <div key={beer.id}
                           className={`tasting-card ${scored ? 'tasting-card--scored' : ''}`}
                           onClick={() => setTastingModal({ session: sess, beer, existingForm: myForm, readOnly: cardReadOnly })}>
                           <div className="tasting-card-main">
                             <div className="tasting-card-name">
-                              {isChamp
+                              {isChamp && !revealed
                                 ? <span className="champagne-id">{sbEntry?.identifier || '???'}</span>
                                 : beer.naam}
                             </div>
                             <div className="tasting-card-meta">
-                              {isChamp ? beer.biertype : `${beer.brouwerij} · ${beer.biertype}`}
+                              {revealed
+                                ? <><span className="champagne-id" style={{ fontSize: '0.7rem', marginRight: 6 }}>{sbEntry?.identifier}</span>{beer.brouwerij} · {beer.biertype}</>
+                                : isChamp ? beer.biertype : `${beer.brouwerij} · ${beer.biertype}`}
                             </div>
                           </div>
                           <div className="tasting-card-status">
