@@ -903,12 +903,21 @@ h1, h2, h3, h4 {
   768-900px = tablet portrait (kaarten, sidebar vast)  
   < 768px  = mobiel (kaarten, hamburger menu)
 */
-.desktop-only { display: block; }
-.mobile-only  { display: none;  }
+/* Visibility helpers — !important on both rules so child display values can't override */
+.desktop-only { display: block !important; }
+.mobile-only  { display: none  !important; }
 
 @media (max-width: 900px) {
-  .desktop-only { display: none !important; }
+  .desktop-only { display: none  !important; }
   .mobile-only  { display: block !important; }
+}
+
+/* Flex/grid mobile-only containers need their layout restored on mobile */
+@media (max-width: 900px) {
+  .mobile-only.beer-card-list   { display: flex  !important; }
+  .mobile-only.score-pills      { display: flex  !important; }
+  .mobile-only.flex-gap         { display: flex  !important; }
+  .mobile-only.brewery-review-card { display: block !important; }
 }
 
 /* ═══════════════════════════════════════════════════
