@@ -1210,7 +1210,8 @@ h1, h2, h3, h4 {
    ═══════════════════════════════════════════════════ */
 .tasting-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* Min 340px per kaart zodat tekst niet afbreekt — max 2 per rij op tablet, meer op breed scherm */
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 10px;
 }
 
