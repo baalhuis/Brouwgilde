@@ -339,17 +339,20 @@ export default function SessionsPage() {
                 </div>
                 <div className="session-actions">
                   {sessAdmin && (
-                    <button className="btn btn-ghost btn-sm" onClick={() => setBeersModal({ session: sess })}>
-                      🍺 Bieren
+                    <button className="session-btn" onClick={() => setBeersModal({ session: sess })}>
+                      <span className="session-btn-icon">🍺</span>
+                      <span className="session-btn-label">Bieren</span>
                     </button>
                   )}
                   {sessAdmin && (
-                    <button className="btn btn-ghost btn-sm" onClick={() => setSessionModal({ session: sess })}>
-                      ⚙️
+                    <button className="session-btn" onClick={() => setSessionModal({ session: sess })}>
+                      <span className="session-btn-icon">⚙️</span>
+                      <span className="session-btn-label">Instellingen</span>
                     </button>
                   )}
-                  <button className="btn btn-secondary btn-sm" onClick={() => setLeaderModal({ session: sess })}>
-                    📊 Leaderboard
+                  <button className="session-btn session-btn--primary" onClick={() => setLeaderModal({ session: sess })}>
+                    <span className="session-btn-icon">📊</span>
+                    <span className="session-btn-label">Leaderboard</span>
                   </button>
                 </div>
               </div>

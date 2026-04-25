@@ -1721,3 +1721,83 @@ body {
     max-width: 100%;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   SESSION ACTION BUTTONS — uniform op alle schermen
+   ═══════════════════════════════════════════════════ */
+
+.session-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.session-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 10px;
+  min-width: 72px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.15s;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.session-btn:hover {
+  background: var(--green-pale);
+  border-color: var(--green);
+  color: var(--green-darker);
+}
+
+.session-btn:active {
+  transform: scale(0.97);
+}
+
+.session-btn--primary {
+  background: var(--green-pale);
+  border-color: var(--green);
+  color: var(--green-deeper);
+}
+
+.session-btn--primary:hover {
+  background: var(--green);
+  color: var(--ink);
+}
+
+.session-btn-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.session-btn-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: inherit;
+}
+
+/* Op mobiel: knoppen vullen de volle breedte gelijkmatig */
+@media (max-width: 768px) {
+  .session-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .session-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 6px;
+  }
+
+  .session-btn-label {
+    font-size: 0.65rem;
+  }
+}
