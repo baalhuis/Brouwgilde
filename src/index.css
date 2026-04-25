@@ -69,14 +69,18 @@ h1, h2, h3, h4 {
 .sidebar-logo {
   padding: 28px 24px 20px;
   border-bottom: 1px solid rgba(145,179,77,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .sidebar-logo-img {
   width: 100%;
-  max-width: 180px;
+  max-width: 160px;
   height: auto;
   display: block;
-  margin-bottom: 6px;
+  margin: 0 auto 6px;
 }
 
 .sidebar-logo-sub {
@@ -86,6 +90,7 @@ h1, h2, h3, h4 {
   text-transform: uppercase;
   font-family: 'Outfit', sans-serif;
   font-weight: 400;
+  text-align: center;
 }
 
 .sidebar-user {

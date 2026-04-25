@@ -73,7 +73,7 @@ function AppShell() {
   const sidebarContent = (
     <>
       <div className="sidebar-logo">
-        <LogoWhite style={{ width: 130, marginBottom: 6 }} />
+        <LogoWhite style={{ width: 130, marginBottom: 6, display: 'block', margin: '0 auto 6px' }} />
         <span className="sidebar-logo-sub">Proefplatform</span>
       </div>
       <div className="sidebar-user">
