@@ -287,6 +287,16 @@ export async function getFormsForMyBeers(ownerId) {
   return data ?? []
 }
 
+export async function deleteForm(sessionId, beerId, userId) {
+  const { error } = await supabase
+    .from('tasting_forms')
+    .delete()
+    .eq('session_id', sessionId)
+    .eq('beer_id', beerId)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
 export async function upsertForm(form) {
   const { data, error } = await supabase
     .from('tasting_forms')

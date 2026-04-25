@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Modal, Alert, SCORING, calcScore } from './UI'
-import { upsertForm } from '../lib/supabase'
+import { upsertForm, deleteForm } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
 export default function TastingFormModal({ beer, session, existingForm, readOnly, onDone, onClose }) {
@@ -112,6 +112,23 @@ export default function TastingFormModal({ beer, session, existingForm, readOnly
           <button className="btn btn-ghost" type="button" onClick={onClose}>
             {canEdit ? 'Annuleren' : 'Sluiten'}
           </button>
+          {canEdit && existingForm && (
+            <button className="btn btn-danger" type="button" disabled={loading}
+              style={{ marginLeft: 'auto' }}
+              onClick={async () => {
+                if (!confirm('Beoordeling resetten naar niet beoordeeld?')) return
+                setLoading(true)
+                try {
+                  await deleteForm(session.id, beer.id, profile.id)
+                  onDone?.()
+                  onClose()
+                } catch (err) {
+                  setError(err.message)
+                } finally { setLoading(false) }
+              }}>
+              🗑 Reset
+            </button>
+          )}
         </div>
       </form>
     </Modal>
