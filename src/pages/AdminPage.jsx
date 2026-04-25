@@ -198,8 +198,8 @@ export default function AdminPage() {
                   {u.id === profile.id && <span className="badge badge-amber" style={{ marginLeft: 6 }}>Jij</span>}
                 </td>
                 <td>{u.brewery_name || <span className="text-muted">—</span>}</td>
-                <td className="cell-truncate" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  {u.email || '—'}
+                <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                  <span className="cell-truncate">{u.email || '—'}</span>
                 </td>
                 <td>{roleBadge(u.role)}</td>
                 <td>
