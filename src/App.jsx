@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AuthProvider, useAuth, useRole } from './lib/AuthContext'
+import { NavContext } from './lib/NavContext'
 import { signOut } from './lib/supabase'
 import { Spinner } from './components/UI'
 import { LogoWhite, HopsDecoration } from './components/Logo'
@@ -44,14 +45,15 @@ function AppShell() {
     if (!seen.has(sec)) { seen.add(sec); sections.push(sec) }
   })
 
+  function navigate(key) {
+    setPage(key)
+    setMenuOpen(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   async function handleLogout() {
     await signOut()
     setPage('dashboard')
-    setMenuOpen(false)
-  }
-
-  function navigate(key) {
-    setPage(key)
     setMenuOpen(false)
   }
 
@@ -70,13 +72,10 @@ function AppShell() {
 
   const sidebarContent = (
     <>
-      {/* Logo area */}
       <div className="sidebar-logo">
         <LogoWhite style={{ width: 130, marginBottom: 6 }} />
         <span className="sidebar-logo-sub">Proefplatform</span>
       </div>
-
-      {/* User info */}
       <div className="sidebar-user">
         <strong>{profile.username}</strong>
         <span className="sidebar-badge">{role}</span>
@@ -86,8 +85,6 @@ function AppShell() {
           </div>
         )}
       </div>
-
-      {/* Navigation */}
       <nav className="nav">
         {sections.map(sec => {
           const items = visibleNav.filter(n => (n.section || '') === sec)
@@ -108,8 +105,6 @@ function AppShell() {
           )
         })}
       </nav>
-
-      {/* Decorative hops + logout */}
       <div className="sidebar-footer">
         <HopsDecoration style={{ width: 80, opacity: 0.15, margin: '0 auto 12px' }} />
         <button className="btn-logout" onClick={handleLogout}>Uitloggen</button>
@@ -118,33 +113,30 @@ function AppShell() {
   )
 
   return (
-    <div className="app-shell">
-      {/* Desktop sidebar */}
-      <aside className="sidebar sidebar-desktop">{sidebarContent}</aside>
+    <NavContext.Provider value={navigate}>
+      <div className="app-shell">
+        <aside className="sidebar sidebar-desktop">{sidebarContent}</aside>
 
-      {/* Mobile topbar */}
-      <header className="mobile-topbar">
-        <div className="mobile-topbar-left">
-          <button className="hamburger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
-            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
-            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
-            <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
-          </button>
-          <span className="mobile-title">
-            {currentNav ? `${currentNav.icon} ${currentNav.label}` : '🍺 Brouwgilde'}
-          </span>
-        </div>
-        <span className="mobile-user">{profile.username}</span>
-      </header>
+        <header className="mobile-topbar">
+          <div className="mobile-topbar-left">
+            <button className="hamburger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+              <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+              <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+              <span className={`hamburger-line ${menuOpen ? 'open' : ''}`} />
+            </button>
+            <span className="mobile-title">
+              {currentNav ? `${currentNav.icon} ${currentNav.label}` : '🍺 Brouwgilde'}
+            </span>
+          </div>
+          <span className="mobile-user">{profile.username}</span>
+        </header>
 
-      {menuOpen && <div className="mobile-overlay" onClick={() => setMenuOpen(false)} />}
+        {menuOpen && <div className="mobile-overlay" onClick={() => setMenuOpen(false)} />}
+        <aside className={`sidebar sidebar-mobile ${menuOpen ? 'open' : ''}`}>{sidebarContent}</aside>
 
-      <aside className={`sidebar sidebar-mobile ${menuOpen ? 'open' : ''}`}>
-        {sidebarContent}
-      </aside>
-
-      <main className="main">{renderPage()}</main>
-    </div>
+        <main className="main">{renderPage()}</main>
+      </div>
+    </NavContext.Provider>
   )
 }
 

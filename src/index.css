@@ -1406,3 +1406,142 @@ h1, h2, h3, h4 {
   .form-row-3 { grid-template-columns: 1fr; }
   .score-label { width: 64px; }
 }
+
+/* ═══════════════════════════════════════════════════
+   DASHBOARD — klikbare kaartjes & sessies
+   ═══════════════════════════════════════════════════ */
+
+.stat-card--clickable {
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card--clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--green);
+}
+
+.stat-card--clickable:active {
+  transform: translateY(-1px);
+}
+
+.stat-card--clickable:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.stat-hint {
+  font-size: 0.72rem;
+  color: var(--green-dark);
+  margin-top: 6px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.18s ease;
+}
+
+.stat-card--clickable:hover .stat-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Dashboard sessie kaartjes */
+.dashboard-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dashboard-session-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-session-card:hover {
+  border-color: var(--green);
+  box-shadow: var(--shadow);
+  transform: translateX(4px);
+}
+
+.dashboard-session-card:active {
+  transform: translateX(2px);
+}
+
+.dashboard-session-card:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.dashboard-session-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-session-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-session-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dashboard-session-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dashboard-session-arrow {
+  font-size: 1.2rem;
+  color: var(--green);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Mobile tweaks */
+@media (max-width: 768px) {
+  .stat-hint { opacity: 1; transform: none; font-size: 0.68rem; }
+
+  .dashboard-session-card {
+    padding: 14px 16px;
+  }
+
+  .dashboard-session-right .flex-gap {
+    display: none; /* verberg badges op heel kleine schermen */
+  }
+
+  .dashboard-session-card:hover {
+    transform: none; /* geen horizontale slide op touch */
+  }
+}
+
+@media (max-width: 400px) {
+  .dashboard-session-right .flex-gap {
+    display: none;
+  }
+}
