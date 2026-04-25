@@ -1216,7 +1216,7 @@ h1, h2, h3, h4 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 14px 16px;
   background: var(--surface);
   border: 1.5px solid var(--border-light);
@@ -1224,6 +1224,10 @@ h1, h2, h3, h4 {
   cursor: pointer;
   transition: all 0.15s;
   min-height: 64px;
+  /* Nooit breder dan de container */
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .tasting-card:hover {
@@ -1240,9 +1244,11 @@ h1, h2, h3, h4 {
   background: var(--green-pale);
 }
 
+/* Tekst-kant: neemt resterende ruimte, kapt af */
 .tasting-card-main {
   flex: 1;
-  min-width: 0;
+  min-width: 0; /* cruciaal: laat flex-child kleiner worden dan inhoud */
+  overflow: hidden;
 }
 
 .tasting-card-name {
@@ -1252,6 +1258,7 @@ h1, h2, h3, h4 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .tasting-card-meta {
@@ -1261,14 +1268,17 @@ h1, h2, h3, h4 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
+/* Status-kant: vaste minimumbreedte zodat hij altijd past */
 .tasting-card-status {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
   flex-shrink: 0;
+  min-width: 80px; /* genoeg voor score of badge */
 }
 
 .tasting-score {
@@ -1285,10 +1295,25 @@ h1, h2, h3, h4 {
     gap: 8px;
   }
   .tasting-card {
-    padding: 14px;
-    min-height: 56px;
+    padding: 12px 14px;
+    min-height: 52px;
+    gap: 8px;
   }
-  .tasting-card-name { font-size: 0.95rem; white-space: normal; }
+  /* Naam mag op mobiel 2 regels worden als hij echt lang is */
+  .tasting-card-name {
+    font-size: 0.9rem;
+    white-space: nowrap; /* blijft 1 regel met ellipsis */
+  }
+  /* Meta altijd 1 regel met ellipsis */
+  .tasting-card-meta {
+    font-size: 0.72rem;
+  }
+  .tasting-card-status {
+    min-width: 72px;
+  }
+  .tasting-score {
+    font-size: 1.2rem;
+  }
 }
 
 /* ═══════════════════════════════════════════════════
