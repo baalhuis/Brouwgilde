@@ -142,7 +142,8 @@ export async function getSessions() {
       *,
       session_participants(user_id),
       session_beers(beer_id, identifier, beer:beers(*)),
-      session_assignments(user_id, beer_id)
+      session_assignments(user_id, beer_id),
+      tasting_forms(*, user:profiles(username))
     `)
     .order('datum', { ascending: false })
   if (error) throw error
@@ -185,6 +186,23 @@ export async function addBeerToSession(sessionId, beerId, identifier = null) {
 }
 
 export async function removeBeerFromSession(sessionId, beerId) {
+  // Verwijder eerst alle proefformulieren voor dit bier in deze sessie
+  const { error: formsError } = await supabase
+    .from('tasting_forms')
+    .delete()
+    .eq('session_id', sessionId)
+    .eq('beer_id', beerId)
+  if (formsError) throw formsError
+
+  // Verwijder ook de toewijzingen voor dit bier
+  const { error: assignError } = await supabase
+    .from('session_assignments')
+    .delete()
+    .eq('session_id', sessionId)
+    .eq('beer_id', beerId)
+  if (assignError) throw assignError
+
+  // Verwijder het bier uit de sessie
   const { error } = await supabase
     .from('session_beers')
     .delete()

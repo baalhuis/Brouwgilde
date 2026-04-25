@@ -14,13 +14,13 @@ export default function ScoresModal({ session, onClose }) {
   const revealed = isChamp && session.closed && session.edit_locked
 
   useEffect(() => {
-    getForms(session.id).then(data => {
-      console.log('ScoresModal forms loaded:', data?.length, data)
-      setForms(data)
-    }).catch(err => {
-      console.error('ScoresModal getForms error:', err)
-      setForms([])
-    })
+    // Gebruik formulieren die al in de sessie-data zitten via getSessions join
+    // Dit omzeilt RLS-problemen op tasting_forms
+    if (session.tasting_forms) {
+      setForms(session.tasting_forms)
+    } else {
+      getForms(session.id).then(setForms)
+    }
   }, [session.id])
 
   if (!forms) return (
@@ -31,7 +31,6 @@ export default function ScoresModal({ session, onClose }) {
 
   // Bieren in deze sessie
   const sessionBeers = session.session_beers || []
-  console.log('ScoresModal session_beers:', sessionBeers.length, sessionBeers)
 
   // Filter
   const filteredBeers = sessionBeers.filter(sb => {
