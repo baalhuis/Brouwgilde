@@ -224,12 +224,13 @@ export default function BeersPage() {
   const canDelete = (b) => isSuperuser
 
   async function handleSave(form) {
-    // Superuser kan namens een andere brouwer aanmaken via form.ownerId
-    const ownerId = form.ownerId || profile.id
+    // Strip ownerId (frontend-only veld) en zet om naar owner_id voor Supabase
+    const { ownerId, ...rest } = form
+    const owner_id = ownerId || profile.id
     if (modal.beer) {
-      await updateBeer(modal.beer.id, { ...form, owner_id: ownerId })
+      await updateBeer(modal.beer.id, { ...rest, owner_id })
     } else {
-      await createBeer({ ...form, owner_id: ownerId })
+      await createBeer({ ...rest, owner_id })
     }
     setModal(null)
     load()
