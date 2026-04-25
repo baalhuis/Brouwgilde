@@ -284,7 +284,10 @@ export default function SessionsPage() {
   }
 
   function isSessionAdmin(sess) {
-    return isSuperuser || sess.admin_id === profile.id
+    // Check role directly from profile to avoid stale closure
+    const role = profile?.role ?? 'brouwer'
+    const userIsAdmin = role === 'admin' || role === 'superuser'
+    return userIsAdmin || sess.admin_id === profile?.id
   }
 
   function getBeerList(sess) {
