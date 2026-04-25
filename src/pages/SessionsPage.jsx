@@ -215,7 +215,8 @@ export default function SessionsPage() {
   const { isAdmin, isSuperuser } = useRole()
   const [sessions, setSessions] = useState([])
   const [allBeers, setAllBeers] = useState([])
-  const [allForms, setAllForms] = useState([])
+  // forms: { [sessionId]: Form[] } — bijgehouden los van sessies
+  const [formsMap, setFormsMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [sessionModal, setSessionModal] = useState(null)
   const [beersModal, setBeersModal] = useState(null)
@@ -228,7 +229,25 @@ export default function SessionsPage() {
       const [s, b] = await Promise.all([getSessions(), getBeers()])
       setSessions(s)
       setAllBeers(b)
+      // Laad formulieren voor alle sessies tegelijk
+      await loadAllForms(s)
     } finally { setLoading(false) }
+  }
+
+  async function loadAllForms(sessionsToLoad) {
+    const entries = await Promise.all(
+      (sessionsToLoad || sessions).map(async sess => {
+        const forms = await getForms(sess.id)
+        return [sess.id, forms]
+      })
+    )
+    setFormsMap(Object.fromEntries(entries))
+  }
+
+  // Herlaad alleen de formulieren van één sessie — snel na opslaan
+  async function refreshFormsForSession(sessionId) {
+    const forms = await getForms(sessionId)
+    setFormsMap(prev => ({ ...prev, [sessionId]: forms }))
   }
 
   useEffect(() => { load() }, [])
@@ -275,23 +294,9 @@ export default function SessionsPage() {
   }
 
   function getMyForm(sess, beerId) {
-    return sess._forms?.find(f => f.beer_id === beerId && f.user_id === profile.id)
+    const forms = formsMap[sess.id] || []
+    return forms.find(f => f.beer_id === beerId && f.user_id === profile.id)
   }
-
-  // Load forms per session when we have sessions
-  useEffect(() => {
-    async function loadForms() {
-      // Attach forms to sessions for quick access
-      const updatedSessions = await Promise.all(
-        sessions.map(async sess => {
-          const forms = await getForms(sess.id)
-          return { ...sess, _forms: forms }
-        })
-      )
-      setSessions(updatedSessions)
-    }
-    if (sessions.length > 0 && !sessions[0]._forms) loadForms()
-  }, [sessions.length])
 
   if (loading) return <Spinner />
 
@@ -431,7 +436,7 @@ export default function SessionsPage() {
           session={tastingModal.session}
           existingForm={tastingModal.existingForm}
           readOnly={tastingModal.readOnly}
-          onDone={load}
+          onDone={() => refreshFormsForSession(tastingModal.session.id)}
           onClose={() => setTastingModal(null)}
         />
       )}
