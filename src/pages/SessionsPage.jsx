@@ -115,8 +115,15 @@ function ManageBeersModal({ session, allBeers, onClose, onUpdate }) {
   }
 
   async function handleRemoveBeer(beerId) {
-    await removeBeerFromSession(session.id, beerId)
-    await refresh()
+    const beer = localSession.session_beers?.find(sb => sb.beer_id === beerId)
+    const beerName = beer?.beer?.naam || beer?.identifier || 'dit bier'
+    if (!confirm(`"${beerName}" uit de sessie verwijderen? Alle beoordelingen van dit bier in deze sessie worden ook verwijderd.`)) return
+    try {
+      await removeBeerFromSession(session.id, beerId)
+      await refresh()
+    } catch (err) {
+      alert('Fout bij verwijderen: ' + err.message)
+    }
   }
 
   async function handleUpdateId(beerId, val) {
