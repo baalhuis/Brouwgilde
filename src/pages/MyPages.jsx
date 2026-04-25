@@ -55,8 +55,9 @@ export function MyFormsPage() {
       ) : (
         <>
           {/* ── Desktop tabel ── */}
-          <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
-            <table className="table">
+          <div className="card desktop-only" style={{ padding: 0 }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table className="table" style={{ minWidth: 700 }}>
               <thead>
                 <tr>
                   <th>Bier</th>
@@ -98,6 +99,7 @@ export function MyFormsPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* ── Mobiele kaarten ── */}
@@ -238,8 +240,8 @@ export function MyBreweryPage() {
             {isExp && (
               <>
                 {/* Desktop tabel */}
-                <div className="desktop-only" style={{ marginTop: 12, overflowX: 'auto' }}>
-                  <table className="table">
+                <div className="desktop-only" style={{ marginTop: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                  <table className="table" style={{ minWidth: 620 }}>
                     <thead>
                       <tr>
                         <th>Proever</th><th>Sessie</th>

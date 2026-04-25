@@ -243,8 +243,9 @@ export default function BeersPage() {
       ) : (
         <>
           {/* ── Desktop tabel ── */}
-          <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
-            <table className="table">
+          <div className="card desktop-only" style={{ padding: 0 }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table className="table" style={{ minWidth: 640 }}>
               <thead>
                 <tr>
                   <th>Naam</th>
@@ -284,6 +285,7 @@ export default function BeersPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* ── Mobiele kaarten ── */}
