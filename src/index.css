@@ -1150,7 +1150,7 @@ h1, h2, h3, h4 {
 
 @media (max-width: 480px) {
   .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
   .stat-card { padding: 12px 6px; }
