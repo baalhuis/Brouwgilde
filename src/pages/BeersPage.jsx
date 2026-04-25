@@ -1,21 +1,31 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useRole } from '../lib/AuthContext'
-import { getBeers, createBeer, updateBeer, deleteBeer } from '../lib/supabase'
+import { getBeers, createBeer, updateBeer, deleteBeer, getAllProfiles } from '../lib/supabase'
 import { Modal, Alert, EmptyState, Spinner, BKG_GROUPS, CATEGORIES } from '../components/UI'
 
 // ── Beer form modal ────────────────────────────────────────────
-function BeerModal({ beer, onSave, onClose }) {
+function BeerModal({ beer, onSave, onClose, profiles }) {
   const { profile } = useAuth()
+  const { isSuperuser } = useRole()
   const [form, setForm] = useState(beer ? {
     naam: beer.naam, categorie: beer.categorie, biertype: beer.biertype,
     brouwerij: beer.brouwerij, beschrijving: beer.beschrijving || '',
     ebc: beer.ebc || '', ibu: beer.ibu || '', abv: beer.abv || '',
     untappd_url: beer.untappd_url || '', brewfather_url: beer.brewfather_url || '',
+    ownerId: beer.owner_id || profile?.id,
   } : {
     naam: '', categorie: 'A', biertype: '', brouwerij: profile?.brewery_name || '',
     beschrijving: '', ebc: '', ibu: '', abv: '', untappd_url: '', brewfather_url: '',
+    ownerId: profile?.id,
   })
+
+  // Als superuser een andere owner kiest: vul brouwerijnaam automatisch in
+  function handleOwnerChange(userId) {
+    const owner = profiles?.find(p => p.id === userId)
+    set('ownerId', userId)
+    if (owner?.brewery_name) set('brouwerij', owner.brewery_name)
+  }
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
@@ -39,6 +49,25 @@ function BeerModal({ beer, onSave, onClose }) {
           <label className="form-label">Naam bier <span className="req">*</span></label>
           <input className="form-input" value={form.naam} onChange={e => set('naam', e.target.value)} />
         </div>
+
+        {/* Superuser: namens welke brouwer */}
+        {isSuperuser && profiles && (
+          <div className="form-group">
+            <label className="form-label">Aanmaken namens brouwer <span className="req">*</span></label>
+            <select className="form-select" value={form.ownerId || ''} onChange={e => handleOwnerChange(e.target.value)}>
+              <option value="">— selecteer brouwer —</option>
+              {profiles.filter(p => p.brewery_name).map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.username} — {p.brewery_name}
+                </option>
+              ))}
+            </select>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              De brouwerijnaam wordt automatisch ingevuld maar kan nog worden aangepast.
+            </div>
+          </div>
+        )}
+
         <div className="form-row">
           <div className="form-group">
             <label className="form-label">Categorie <span className="req">*</span></label>
@@ -162,6 +191,7 @@ export default function BeersPage() {
   const { profile } = useAuth()
   const { isSuperuser } = useRole()
   const [beers, setBeers] = useState([])
+  const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [modal, setModal] = useState(null)
@@ -171,8 +201,12 @@ export default function BeersPage() {
   async function load() {
     setLoading(true)
     try {
-      const data = await getBeers()
+      const [data, profileData] = await Promise.all([
+        getBeers(),
+        isSuperuser ? getAllProfiles() : Promise.resolve([]),
+      ])
       setBeers(data ?? [])
+      setProfiles(profileData ?? [])
     } catch (err) {
       console.error('Fout bij ophalen bieren:', err)
       setError('Kon bieren niet laden: ' + err.message)
@@ -186,10 +220,12 @@ export default function BeersPage() {
   const canDelete = (b) => isSuperuser
 
   async function handleSave(form) {
+    // Superuser kan namens een andere brouwer aanmaken via form.ownerId
+    const ownerId = (isSuperuser && form.ownerId) ? form.ownerId : profile.id
     if (modal.beer) {
-      await updateBeer(modal.beer.id, form)
+      await updateBeer(modal.beer.id, { ...form, owner_id: ownerId })
     } else {
-      await createBeer({ ...form, owner_id: profile.id })
+      await createBeer({ ...form, owner_id: ownerId })
     }
     setModal(null)
     load()
@@ -320,7 +356,7 @@ export default function BeersPage() {
         </>
       )}
 
-      {modal && <BeerModal beer={modal.beer} onSave={handleSave} onClose={() => setModal(null)} />}
+      {modal && <BeerModal beer={modal.beer} onSave={handleSave} onClose={() => setModal(null)} profiles={profiles} />}
     </div>
   )
 }
