@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useRole } from '../lib/AuthContext'
 import { getBeers, createBeer, updateBeer, deleteBeer } from '../lib/supabase'
-import { Modal, Alert, EmptyState, Spinner, BEER_TYPES, CATEGORIES } from '../components/UI'
+import { Modal, Alert, EmptyState, Spinner, BKG_GROUPS, CATEGORIES } from '../components/UI'
 
 // ── Beer form modal ────────────────────────────────────────────
 function BeerModal({ beer, onSave, onClose }) {
@@ -54,8 +54,12 @@ function BeerModal({ beer, onSave, onClose }) {
         <div className="form-group">
           <label className="form-label">Biertype <span className="req">*</span></label>
           <select className="form-select" value={form.biertype} onChange={e => set('biertype', e.target.value)}>
-            <option value="">— selecteer type —</option>
-            {BEER_TYPES.map(t => <option key={t}>{t}</option>)}
+            <option value="">— selecteer BKG biertype —</option>
+            {BKG_GROUPS.map(g => (
+              <optgroup key={g.label} label={g.label}>
+                {g.types.map(t => <option key={t}>{t}</option>)}
+              </optgroup>
+            ))}
           </select>
         </div>
         <div className="form-row-3">
