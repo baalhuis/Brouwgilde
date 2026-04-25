@@ -212,9 +212,13 @@ export function MyBreweryPage() {
     async function load() {
       setLoading(true)
       try {
-        const [f, b] = await Promise.all([getFormsForMyBeers(profile.id), getBeers()])
+        const [f, b] = await Promise.all([
+          getFormsForMyBeers(profile.brewery_name),
+          getBeers(),
+        ])
         setForms(f)
-        setMyBeers(b.filter(b => b.owner_id === profile.id))
+        // Toon alle bieren van de brouwerij op naam, niet alleen eigen bieren
+        setMyBeers(b.filter(b => b.brouwerij === profile.brewery_name))
       } finally { setLoading(false) }
     }
     load()

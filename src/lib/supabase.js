@@ -269,16 +269,17 @@ export async function getMyForms(userId) {
   return data
 }
 
-export async function getFormsForMyBeers(ownerId) {
-  // First get the owner's beers, then get forms for those beers
-  const { data: myBeers, error: beersErr } = await supabase
+export async function getFormsForMyBeers(breweryName) {
+  // Haal alle bieren op van de brouwerij (op naam, niet op owner_id)
+  // zodat bieren aangemaakt door andere leden van dezelfde brouwerij ook getoond worden
+  const { data: breweryBeers, error: beersErr } = await supabase
     .from('beers')
     .select('id')
-    .eq('owner_id', ownerId)
+    .eq('brouwerij', breweryName)
   if (beersErr) throw beersErr
-  if (!myBeers || myBeers.length === 0) return []
+  if (!breweryBeers || breweryBeers.length === 0) return []
 
-  const beerIds = myBeers.map(b => b.id)
+  const beerIds = breweryBeers.map(b => b.id)
   const { data, error } = await supabase
     .from('tasting_forms')
     .select(`*, user:profiles(username), beer:beers(naam, biertype, brouwerij, categorie, owner_id), session:sessions(naam, type)`)
