@@ -1178,18 +1178,15 @@ h1, h2, h3, h4 {
    ═══════════════════════════════════════════════════ */
 .session-header {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;  /* altijd gestapeld: titel boven, knoppen eronder */
+  gap: 10px;
   margin-bottom: 10px;
-  flex-wrap: wrap;
 }
 
 .session-header-top {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
   min-width: 0;
 }
 
@@ -1202,25 +1199,10 @@ h1, h2, h3, h4 {
 
 .session-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
-  align-items: flex-start;
-  flex-shrink: 0;
-}
-
-@media (max-width: 900px) {
-  .session-header {
-    flex-direction: column;
-    gap: 10px;
-  }
-  .session-actions {
-    width: 100%;
-  }
-  .session-actions .btn {
-    flex: 1;
-    justify-content: center;
-    min-width: 0;
-  }
+  align-items: center;
+  width: 100%;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1801,21 +1783,22 @@ body {
   color: inherit;
 }
 
-/* Op mobiel: knoppen in een 2-kolommen grid */
+/* Knoppen altijd in 2-kolommen grid (header is altijd gestapeld) */
+.session-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.session-btn {
+  width: 100%;
+}
+
 @media (max-width: 900px) {
-  .session-actions {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    width: 100%;
-  }
-
   .session-btn {
-    min-width: 0;
     padding: 10px 6px;
-    width: 100%;
   }
-
   .session-btn-label {
     font-size: 0.65rem;
   }
