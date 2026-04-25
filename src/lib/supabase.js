@@ -71,6 +71,31 @@ export async function updateProfile(userId, updates) {
   return data
 }
 
+
+// ── USER MANAGEMENT (superuser) ───────────────────────────────
+
+export async function deleteProfile(userId) {
+  // Delete from profiles first (cascade will handle related data)
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId)
+  if (error) throw error
+}
+
+export async function getBreweries() {
+  // Get unique brewery names from profiles
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('brewery_name')
+    .not('brewery_name', 'is', null)
+    .order('brewery_name')
+  if (error) throw error
+  // Return unique brewery names
+  const unique = [...new Set(data.map(p => p.brewery_name).filter(Boolean))]
+  return unique
+}
+
 // ── BEERS ─────────────────────────────────────────────────────
 
 export async function getBeers() {

@@ -1,16 +1,27 @@
-import { useState } from 'react'
-import { signIn, signUp } from '../lib/supabase'
+import { useState, useEffect } from 'react'
+import { signIn, signUp, getBreweries } from '../lib/supabase'
 import { Alert } from '../components/UI'
 import { LogoGreen, HopsDecoration } from '../components/Logo'
 
 export default function LoginPage() {
   const [tab, setTab] = useState('login')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [info, setInfo] = useState('')
+  const [error, setError]   = useState('')
+  const [info, setInfo]     = useState('')
+  const [breweries, setBreweries] = useState([])
+  const [breweryMode, setBreweryMode] = useState('existing') // 'existing' | 'new'
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
-  const [regForm, setRegForm] = useState({ email: '', password: '', username: '', breweryName: '' })
+  const [regForm, setRegForm]     = useState({
+    email: '', password: '', username: '', breweryName: '', selectedBrewery: ''
+  })
+
+  // Load existing breweries for the register form
+  useEffect(() => {
+    if (tab === 'register') {
+      getBreweries().then(setBreweries).catch(() => setBreweries([]))
+    }
+  }, [tab])
 
   async function handleLogin(e) {
     e.preventDefault(); setError(''); setLoading(true)
@@ -25,15 +36,20 @@ export default function LoginPage() {
 
   async function handleRegister(e) {
     e.preventDefault(); setError(''); setLoading(true)
-    const { email, password, username, breweryName } = regForm
-    if (!email || !password || !username || !breweryName) {
-      setError('Alle velden zijn verplicht.'); setLoading(false); return
+    const { email, password, username, breweryName, selectedBrewery } = regForm
+    const finalBrewery = breweryMode === 'existing' ? selectedBrewery : breweryName
+
+    if (!email || !password || !username) {
+      setError('E-mail, wachtwoord en gebruikersnaam zijn verplicht.'); setLoading(false); return
+    }
+    if (!finalBrewery) {
+      setError('Selecteer of geef een brouwerijnaam op.'); setLoading(false); return
     }
     if (password.length < 6) {
       setError('Wachtwoord moet minimaal 6 tekens zijn.'); setLoading(false); return
     }
     try {
-      await signUp(email, password, username, breweryName)
+      await signUp(email, password, username, finalBrewery)
       setInfo('Registratie gelukt! Je kunt nu direct inloggen.')
       setTab('login')
       setLoginForm(p => ({ ...p, email }))
@@ -47,14 +63,10 @@ export default function LoginPage() {
   return (
     <div className="login-wrap">
       <div className="login-box">
-
-        {/* Logo */}
         <div className="login-logo">
           <LogoGreen style={{ width: 160, margin: '0 auto 10px' }} />
           <p>Digitaal Proefplatform</p>
         </div>
-
-        {/* Decorative hops strip */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20, opacity: 0.25 }}>
           <HopsDecoration style={{ width: 100 }} />
         </div>
@@ -88,7 +100,7 @@ export default function LoginPage() {
                 onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))} />
             </div>
             <button className="btn btn-primary"
-              style={{ width: '100%', justifyContent: 'center', marginTop: 6 }}
+              style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
               type="submit" disabled={loading}>
               {loading ? 'Bezig...' : 'Inloggen →'}
             </button>
@@ -110,14 +122,46 @@ export default function LoginPage() {
               <input className="form-input" type="password" required value={regForm.password}
                 onChange={e => setRegForm(p => ({ ...p, password: e.target.value }))} />
             </div>
+
+            {/* Brouwerij — bestaand of nieuw */}
             <div className="form-group">
-              <label className="form-label">Naam brouwerij <span className="req">*</span></label>
-              <input className="form-input" required placeholder="Jouw brouwerijnaam"
-                value={regForm.breweryName}
-                onChange={e => setRegForm(p => ({ ...p, breweryName: e.target.value }))} />
+              <label className="form-label">Brouwerij <span className="req">*</span></label>
+              <div className="flex-gap mb-1" style={{ gap: 16 }}>
+                <label className="checkbox-label" style={{ cursor: 'pointer' }}>
+                  <input type="radio" name="bmode" value="existing"
+                    checked={breweryMode === 'existing'}
+                    onChange={() => setBreweryMode('existing')} />
+                  Bestaande brouwerij
+                </label>
+                <label className="checkbox-label" style={{ cursor: 'pointer' }}>
+                  <input type="radio" name="bmode" value="new"
+                    checked={breweryMode === 'new'}
+                    onChange={() => setBreweryMode('new')} />
+                  Nieuwe brouwerij
+                </label>
+              </div>
+
+              {breweryMode === 'existing' ? (
+                breweries.length > 0 ? (
+                  <select className="form-select" value={regForm.selectedBrewery}
+                    onChange={e => setRegForm(p => ({ ...p, selectedBrewery: e.target.value }))}>
+                    <option value="">— selecteer brouwerij —</option>
+                    {breweries.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                ) : (
+                  <div className="alert alert-info" style={{ fontSize: '0.82rem' }}>
+                    Nog geen brouwerijen geregistreerd. Kies "Nieuwe brouwerij".
+                  </div>
+                )
+              ) : (
+                <input className="form-input" required placeholder="Naam van jouw brouwerij"
+                  value={regForm.breweryName}
+                  onChange={e => setRegForm(p => ({ ...p, breweryName: e.target.value }))} />
+              )}
             </div>
+
             <button className="btn btn-primary"
-              style={{ width: '100%', justifyContent: 'center', marginTop: 6 }}
+              style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
               type="submit" disabled={loading}>
               {loading ? 'Bezig...' : 'Account aanmaken →'}
             </button>

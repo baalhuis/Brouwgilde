@@ -1,41 +1,142 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
-import { getAllProfiles, updateProfile, getBeers, getSessions } from '../lib/supabase'
-import { Spinner, Alert, SectionTitle } from '../components/UI'
+import { getAllProfiles, updateProfile, deleteProfile, getBreweries, getBeers, getSessions } from '../lib/supabase'
+import { Spinner, Alert, SectionTitle, Modal } from '../components/UI'
 
+// ── Edit user modal ────────────────────────────────────────────
+function EditUserModal({ user, breweries, onSave, onClose }) {
+  const [form, setForm] = useState({
+    username:     user.username     || '',
+    brewery_name: user.brewery_name || '',
+    role:         user.role         || 'brouwer',
+  })
+  const [breweryMode, setBreweryMode] = useState('existing') // 'existing' | 'new'
+  const [loading, setLoading] = useState(false)
+  const [error, setError]   = useState('')
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  async function handleSave(e) {
+    e.preventDefault(); setError('')
+    if (!form.username) { setError('Gebruikersnaam is verplicht.'); return }
+    setLoading(true)
+    try { await onSave(user.id, form) }
+    catch (err) { setError(err.message) }
+    finally { setLoading(false) }
+  }
+
+  return (
+    <Modal title={`Gebruiker bewerken — ${user.username}`} onClose={onClose}>
+      {error && <Alert type="error">{error}</Alert>}
+      <form onSubmit={handleSave}>
+
+        <div className="form-group">
+          <label className="form-label">Gebruikersnaam <span className="req">*</span></label>
+          <input className="form-input" value={form.username}
+            onChange={e => set('username', e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Rol</label>
+          <select className="form-select" value={form.role} onChange={e => set('role', e.target.value)}>
+            <option value="brouwer">brouwer</option>
+            <option value="admin">admin</option>
+            <option value="superuser">superuser</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Brouwerij</label>
+          <div className="flex-gap mb-1" style={{ gap: 12 }}>
+            <label className="checkbox-label" style={{ cursor: 'pointer' }}>
+              <input type="radio" name="breweryMode" value="existing"
+                checked={breweryMode === 'existing'}
+                onChange={() => setBreweryMode('existing')} />
+              Bestaande brouwerij
+            </label>
+            <label className="checkbox-label" style={{ cursor: 'pointer' }}>
+              <input type="radio" name="breweryMode" value="new"
+                checked={breweryMode === 'new'}
+                onChange={() => setBreweryMode('new')} />
+              Nieuwe brouwerij
+            </label>
+          </div>
+
+          {breweryMode === 'existing' ? (
+            <select className="form-select" value={form.brewery_name}
+              onChange={e => set('brewery_name', e.target.value)}>
+              <option value="">— geen brouwerij —</option>
+              {breweries.map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          ) : (
+            <input className="form-input" placeholder="Naam nieuwe brouwerij"
+              value={form.brewery_name} onChange={e => set('brewery_name', e.target.value)} />
+          )}
+        </div>
+
+        <div className="flex-gap mt-2">
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Opslaan...' : 'Opslaan'}
+          </button>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>Annuleren</button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+// ── Main admin page ────────────────────────────────────────────
 export default function AdminPage() {
   const { profile } = useAuth()
-  const [users, setUsers] = useState([])
-  const [stats, setStats] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(null)
-  const [error, setError] = useState('')
+  const [users, setUsers]         = useState([])
+  const [breweries, setBreweries] = useState([])
+  const [stats, setStats]         = useState(null)
+  const [loading, setLoading]     = useState(true)
+  const [editModal, setEditModal] = useState(null)
+  const [error, setError]         = useState('')
+  const [success, setSuccess]     = useState('')
 
   async function load() {
     setLoading(true)
     try {
-      const [u, b, s] = await Promise.all([getAllProfiles(), getBeers(), getSessions()])
+      const [u, b, beers, sessions] = await Promise.all([
+        getAllProfiles(), getBreweries(), getBeers(), getSessions()
+      ])
       setUsers(u)
-      setStats({ users: u.length, beers: b.length, sessions: s.length })
+      setBreweries(b)
+      setStats({ users: u.length, beers: beers.length, sessions: sessions.length })
     } finally { setLoading(false) }
   }
 
   useEffect(() => { load() }, [])
 
-  async function changeRole(userId, role) {
-    setSaving(userId); setError('')
+  async function handleSave(userId, form) {
+    await updateProfile(userId, {
+      username:     form.username,
+      brewery_name: form.brewery_name || null,
+      role:         form.role,
+    })
+    setSuccess(`Gebruiker "${form.username}" bijgewerkt.`)
+    setEditModal(null)
+    load()
+    setTimeout(() => setSuccess(''), 3000)
+  }
+
+  async function handleDelete(user) {
+    if (!confirm(`Gebruiker "${user.username}" verwijderen?\n\nLet op: alle bieren en beoordelingen van deze gebruiker blijven bestaan maar zijn niet meer gekoppeld aan een account.`)) return
+    setError('')
     try {
-      await updateProfile(userId, { role })
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u))
-    } catch (err) { setError(err.message) }
-    finally { setSaving(null) }
+      await deleteProfile(user.id)
+      setSuccess(`Gebruiker "${user.username}" verwijderd.`)
+      load()
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   if (loading) return <Spinner />
-
-  const ROLE_OPTIONS = profile?.role === 'superuser'
-    ? ['brouwer', 'admin', 'superuser']
-    : ['brouwer', 'admin']
 
   const roleBadge = (role) => {
     const cls = role === 'superuser' ? 'badge-red' : role === 'admin' ? 'badge-copper' : 'badge-hop'
@@ -49,7 +150,8 @@ export default function AdminPage() {
         <p>Gebruikersbeheer en systeeminstellingen</p>
       </div>
 
-      {error && <Alert type="error">{error}</Alert>}
+      {error   && <Alert type="error">{error}</Alert>}
+      {success && <Alert type="success">{success}</Alert>}
 
       {/* Stats */}
       {stats && (
@@ -67,17 +169,25 @@ export default function AdminPage() {
         </>
       )}
 
-      <SectionTitle>Gebruikers</SectionTitle>
+      <SectionTitle>Gebruikers ({users.length})</SectionTitle>
 
       {/* Desktop tabel */}
       <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="table fluid-table">
+          <colgroup>
+            <col style={{ width: '22%' }} />
+            <col style={{ width: '24%' }} />
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '22%' }} />
+          </colgroup>
           <thead>
             <tr>
               <th>Gebruikersnaam</th>
               <th>Brouwerij</th>
+              <th>E-mail</th>
               <th>Rol</th>
-              <th>Wijzigen</th>
+              <th>Acties</th>
             </tr>
           </thead>
           <tbody>
@@ -88,16 +198,23 @@ export default function AdminPage() {
                   {u.id === profile.id && <span className="badge badge-amber" style={{ marginLeft: 6 }}>Jij</span>}
                 </td>
                 <td>{u.brewery_name || <span className="text-muted">—</span>}</td>
+                <td className="cell-truncate" style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                  {u.email || '—'}
+                </td>
                 <td>{roleBadge(u.role)}</td>
                 <td>
-                  {(u.id !== profile.id || profile.role === 'superuser') ? (
-                    <select className="form-select" style={{ padding: '4px 8px', fontSize: '0.82rem', width: 'auto' }}
-                      value={u.role}
-                      disabled={saving === u.id || (u.role === 'superuser' && profile.role !== 'superuser')}
-                      onChange={e => changeRole(u.id, e.target.value)}>
-                      {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                  ) : <span className="text-muted" style={{ fontSize: '0.82rem' }}>Eigen account</span>}
+                  <div className="flex-gap">
+                    <button className="btn btn-ghost btn-sm"
+                      onClick={() => setEditModal(u)}>
+                      ✏️ Bewerken
+                    </button>
+                    {u.id !== profile.id && (
+                      <button className="btn btn-danger btn-sm"
+                        onClick={() => handleDelete(u)}>
+                        🗑
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -116,19 +233,22 @@ export default function AdminPage() {
                   {u.id === profile.id && <span className="badge badge-amber" style={{ marginLeft: 6 }}>Jij</span>}
                 </div>
                 <div className="admin-user-brewery">{u.brewery_name || <span className="text-muted">Geen brouwerij</span>}</div>
+                {u.email && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{u.email}</div>}
               </div>
               {roleBadge(u.role)}
             </div>
-            {(u.id !== profile.id || profile.role === 'superuser') && !(u.role === 'superuser' && profile.role !== 'superuser') && (
-              <div className="admin-user-role-select">
-                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Rol wijzigen</label>
-                <select className="form-select" value={u.role}
-                  disabled={saving === u.id}
-                  onChange={e => changeRole(u.id, e.target.value)}>
-                  {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-            )}
+            <div className="flex-gap mt-1">
+              <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }}
+                onClick={() => setEditModal(u)}>
+                ✏️ Bewerken
+              </button>
+              {u.id !== profile.id && (
+                <button className="btn btn-danger btn-sm"
+                  onClick={() => handleDelete(u)}>
+                  🗑
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -138,6 +258,15 @@ export default function AdminPage() {
         <div><strong>admin</strong> — ook proefsessies aanmaken en beheren</div>
         <div><strong>superuser</strong> — volledige toegang, altijd alles bewerken</div>
       </div>
+
+      {editModal && (
+        <EditUserModal
+          user={editModal}
+          breweries={breweries}
+          onSave={handleSave}
+          onClose={() => setEditModal(null)}
+        />
+      )}
     </div>
   )
 }
