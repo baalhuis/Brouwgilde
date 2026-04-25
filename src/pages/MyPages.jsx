@@ -37,6 +37,25 @@ export function MyFormsPage() {
 
   function getSession(id) { return sessions.find(s => s.id === id) }
 
+  // Geeft de weergavenaam van een bier terug — identifier als kampioenschap nog niet onthuld
+  function getBeerDisplayName(f) {
+    const sess = getSession(f.session_id)
+    const isChamp = sess?.type === 'kampioenschap'
+    const revealed = isChamp && sess?.closed && sess?.edit_locked
+    if (isChamp && !revealed) {
+      const sb = sess?.session_beers?.find(sb => sb.beer_id === f.beer_id)
+      return sb?.identifier || '???'
+    }
+    return f.beer?.naam || '—'
+  }
+
+  function isChampUnrevealed(f) {
+    const sess = getSession(f.session_id)
+    const isChamp = sess?.type === 'kampioenschap'
+    const revealed = isChamp && sess?.closed && sess?.edit_locked
+    return isChamp && !revealed
+  }
+
   function openForm(f) {
     const sess = getSession(f.session_id)
     const readOnly = sess?.closed || (sess?.edit_locked && profile?.role !== 'superuser')
@@ -92,7 +111,9 @@ export function MyFormsPage() {
                   return (
                     <tr key={f.id}>
                       <td>
-                        <strong className="cell-truncate">{f.beer?.naam || '—'}</strong>
+                        {isChampUnrevealed(f)
+                          ? <span className="champagne-id cell-truncate">{getBeerDisplayName(f)}</span>
+                          : <strong className="cell-truncate">{getBeerDisplayName(f)}</strong>}
                         <div className="text-muted hide-tablet-inverse" style={{ fontSize: '0.75rem', marginTop: 2 }}>
                           {f.session?.naam || '—'} · {new Date(f.created_at).toLocaleDateString('nl-NL')}
                         </div>
@@ -127,7 +148,11 @@ export function MyFormsPage() {
                 <div key={f.id} className="form-card" onClick={() => openForm(f)}>
                   <div className="form-card-header">
                     <div>
-                      <div className="form-card-name">{f.beer?.naam || '—'}</div>
+                      <div className="form-card-name">
+                        {isChampUnrevealed(f)
+                          ? <span className="champagne-id">{getBeerDisplayName(f)}</span>
+                          : getBeerDisplayName(f)}
+                      </div>
                       <div className="form-card-session">
                         {f.session?.naam || '—'}
                         {f.session && <span className="badge badge-amber" style={{ marginLeft: 6 }}>{f.session.type}</span>}
