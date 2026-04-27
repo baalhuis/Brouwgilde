@@ -1,7 +1,96 @@
 import { useEffect, useState } from 'react'
 import { useAuth, useRole } from '../lib/AuthContext'
-import { getAllProfiles, updateProfile, deleteProfile, getBreweries, getBreweriesTable, createBrewery, updateBrewery, deleteBrewery, getBeers, getSessions } from '../lib/supabase'
+import { getAllProfiles, updateProfile, deleteProfile, getBreweries, getBreweriesTable, createBrewery, updateBrewery, deleteBrewery, getBeers, getSessions, signUp } from '../lib/supabase'
 import { Spinner, Alert, SectionTitle, Modal } from '../components/UI'
+
+// ── Add user modal ─────────────────────────────────────────────
+function AddUserModal({ breweries, onSave, onClose }) {
+  const [form, setForm] = useState({
+    email: '', password: '', username: '', brewery_name: '', role: 'brouwer'
+  })
+  const [breweryMode, setBreweryMode] = useState('existing')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  async function handleSave(e) {
+    e.preventDefault(); setError('')
+    if (!form.email || !form.password || !form.username) {
+      setError('E-mail, wachtwoord en gebruikersnaam zijn verplicht.'); return
+    }
+    if (form.password.length < 6) {
+      setError('Wachtwoord moet minimaal 6 tekens zijn.'); return
+    }
+    setLoading(true)
+    try { await onSave(form) }
+    catch (err) { setError(err.message.includes('already registered') ? 'Dit e-mailadres is al geregistreerd.' : err.message) }
+    finally { setLoading(false) }
+  }
+
+  return (
+    <Modal title="Nieuwe gebruiker toevoegen" onClose={onClose}>
+      {error && <Alert type="error">{error}</Alert>}
+      <form onSubmit={handleSave}>
+        <div className="form-group">
+          <label className="form-label">Gebruikersnaam <span className="req">*</span></label>
+          <input className="form-input" value={form.username} onChange={e => set('username', e.target.value)} autoFocus />
+        </div>
+        <div className="form-group">
+          <label className="form-label">E-mailadres <span className="req">*</span></label>
+          <input className="form-input" type="email" value={form.email} onChange={e => set('email', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Wachtwoord <span className="req">*</span></label>
+          <input className="form-input" type="password" value={form.password} onChange={e => set('password', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Rol</label>
+          <select className="form-select" value={form.role} onChange={e => set('role', e.target.value)}>
+            <option value="brouwer">brouwer</option>
+            <option value="admin">admin</option>
+            <option value="superuser">superuser</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Brouwerij</label>
+          <div className="flex-gap mb-1" style={{ gap: 12 }}>
+            <label className="checkbox-label" style={{ cursor: 'pointer' }}>
+              <input type="radio" name="addBMode" value="existing"
+                checked={breweryMode === 'existing'} onChange={() => setBreweryMode('existing')} />
+              Bestaande
+            </label>
+            <label className="checkbox-label" style={{ cursor: 'pointer' }}>
+              <input type="radio" name="addBMode" value="new"
+                checked={breweryMode === 'new'} onChange={() => setBreweryMode('new')} />
+              Nieuwe
+            </label>
+            <label className="checkbox-label" style={{ cursor: 'pointer' }}>
+              <input type="radio" name="addBMode" value="none"
+                checked={breweryMode === 'none'} onChange={() => { setBreweryMode('none'); set('brewery_name', '') }} />
+              Geen
+            </label>
+          </div>
+          {breweryMode === 'existing' && (
+            <select className="form-select" value={form.brewery_name} onChange={e => set('brewery_name', e.target.value)}>
+              <option value="">— selecteer brouwerij —</option>
+              {breweries.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          )}
+          {breweryMode === 'new' && (
+            <input className="form-input" placeholder="Naam nieuwe brouwerij"
+              value={form.brewery_name} onChange={e => set('brewery_name', e.target.value)} />
+          )}
+        </div>
+        <div className="flex-gap mt-2">
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Bezig...' : '+ Gebruiker toevoegen'}
+          </button>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>Annuleren</button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
 
 // ── Edit user modal ────────────────────────────────────────────
 function EditUserModal({ user, breweries, onSave, onClose }) {
@@ -135,6 +224,7 @@ export default function AdminPage() {
   const [breweries, setBreweries] = useState([])
   const [breweriesTable, setBreweriesTable] = useState([])
   const [breweryModal, setBreweryModal] = useState(null) // null | {} | {brewery}
+  const [addUserModal, setAddUserModal] = useState(false)
   const [stats, setStats]         = useState(null)
   const [loading, setLoading]     = useState(true)
   const [editModal, setEditModal] = useState(null)
@@ -155,6 +245,22 @@ export default function AdminPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  async function handleAddUser(form) {
+    await signUp(form.email, form.password, form.username, form.brewery_name || null)
+    // Update role if not default brouwer
+    if (form.role !== 'brouwer') {
+      // Find the new profile and update role
+      await new Promise(r => setTimeout(r, 800)) // wait for trigger
+      const profiles = await getAllProfiles()
+      const newUser = profiles.find(p => p.email === form.email)
+      if (newUser) await updateProfile(newUser.id, { role: form.role })
+    }
+    setAddUserModal(false)
+    setSuccess(`Gebruiker "${form.username}" aangemaakt.`)
+    load()
+    setTimeout(() => setSuccess(''), 3000)
+  }
 
   async function handleSaveBrewery(form) {
     if (breweryModal?.brewery) {
@@ -235,7 +341,14 @@ export default function AdminPage() {
         </>
       )}
 
-      <SectionTitle>Gebruikers ({users.length})</SectionTitle>
+      <div className="flex-between mb-1">
+        <SectionTitle style={{ marginBottom: 0 }}>Gebruikers ({users.length})</SectionTitle>
+        {isSuperuser && (
+          <button className="btn btn-primary btn-sm" onClick={() => setAddUserModal(true)}>
+            + Gebruiker toevoegen
+          </button>
+        )}
+      </div>
 
       {/* Desktop tabel */}
       <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
@@ -392,6 +505,13 @@ export default function AdminPage() {
         <div><strong>superuser</strong> — volledige toegang, altijd alles bewerken</div>
       </div>
 
+      {addUserModal && (
+        <AddUserModal
+          breweries={breweries}
+          onSave={handleAddUser}
+          onClose={() => setAddUserModal(false)}
+        />
+      )}
       {breweryModal !== null && (
         <BreweryModal
           brewery={breweryModal.brewery}
