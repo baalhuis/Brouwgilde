@@ -83,16 +83,53 @@ export async function deleteProfile(userId) {
   if (error) throw error
 }
 
-export async function getBreweries() {
-  // Get unique brewery names from profiles
+export async function getBreweriesTable() {
   const { data, error } = await supabase
-    .from('profiles')
-    .select('brewery_name')
-    .not('brewery_name', 'is', null)
-    .order('brewery_name')
+    .from('breweries')
+    .select('*')
+    .order('naam')
   if (error) throw error
-  // Return unique brewery names
-  const unique = [...new Set(data.map(p => p.brewery_name).filter(Boolean))]
+  return data ?? []
+}
+
+export async function createBrewery(naam, beschrijving = '') {
+  const { data, error } = await supabase
+    .from('breweries')
+    .insert({ naam, beschrijving })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateBrewery(id, updates) {
+  const { data, error } = await supabase
+    .from('breweries')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteBrewery(id) {
+  const { error } = await supabase
+    .from('breweries')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function getBreweries() {
+  // Haal namen op uit zowel profiles als de breweries tabel (zodat standalone brouwerijen ook zichtbaar zijn)
+  const [profilesRes, breweriesRes] = await Promise.all([
+    supabase.from('profiles').select('brewery_name').not('brewery_name', 'is', null),
+    supabase.from('breweries').select('naam')
+  ])
+  const fromProfiles = (profilesRes.data || []).map(p => p.brewery_name).filter(Boolean)
+  const fromTable = (breweriesRes.data || []).map(b => b.naam).filter(Boolean)
+  const unique = [...new Set([...fromTable, ...fromProfiles])].sort()
   return unique
 }
 

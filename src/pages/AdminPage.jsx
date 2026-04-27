@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useAuth } from '../lib/AuthContext'
-import { getAllProfiles, updateProfile, deleteProfile, getBreweries, getBeers, getSessions } from '../lib/supabase'
+import { useAuth, useRole } from '../lib/AuthContext'
+import { getAllProfiles, updateProfile, deleteProfile, getBreweries, getBreweriesTable, createBrewery, updateBrewery, deleteBrewery, getBeers, getSessions } from '../lib/supabase'
 import { Spinner, Alert, SectionTitle, Modal } from '../components/UI'
 
 // ── Edit user modal ────────────────────────────────────────────
@@ -86,11 +86,55 @@ function EditUserModal({ user, breweries, onSave, onClose }) {
   )
 }
 
+
+// ── Brewery modal ──────────────────────────────────────────────
+function BreweryModal({ brewery, onSave, onClose }) {
+  const [naam, setNaam] = useState(brewery?.naam || '')
+  const [beschrijving, setBeschrijving] = useState(brewery?.beschrijving || '')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSave(e) {
+    e.preventDefault(); setError('')
+    if (!naam.trim()) { setError('Naam is verplicht.'); return }
+    setLoading(true)
+    try { await onSave({ naam: naam.trim(), beschrijving }) }
+    catch (err) { setError(err.message) }
+    finally { setLoading(false) }
+  }
+
+  return (
+    <Modal title={brewery ? `Brouwerij bewerken — ${brewery.naam}` : 'Nieuwe brouwerij'} onClose={onClose}>
+      {error && <Alert type="error">{error}</Alert>}
+      <form onSubmit={handleSave}>
+        <div className="form-group">
+          <label className="form-label">Naam <span className="req">*</span></label>
+          <input className="form-input" value={naam} onChange={e => setNaam(e.target.value)} autoFocus />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Beschrijving</label>
+          <input className="form-input" value={beschrijving} onChange={e => setBeschrijving(e.target.value)}
+            placeholder="Optioneel" />
+        </div>
+        <div className="flex-gap mt-2">
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Opslaan...' : 'Opslaan'}
+          </button>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>Annuleren</button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
 // ── Main admin page ────────────────────────────────────────────
 export default function AdminPage() {
   const { profile } = useAuth()
+  const { isSuperuser } = useRole()
   const [users, setUsers]         = useState([])
   const [breweries, setBreweries] = useState([])
+  const [breweriesTable, setBreweriesTable] = useState([])
+  const [breweryModal, setBreweryModal] = useState(null) // null | {} | {brewery}
   const [stats, setStats]         = useState(null)
   const [loading, setLoading]     = useState(true)
   const [editModal, setEditModal] = useState(null)
@@ -100,16 +144,38 @@ export default function AdminPage() {
   async function load() {
     setLoading(true)
     try {
-      const [u, b, beers, sessions] = await Promise.all([
-        getAllProfiles(), getBreweries(), getBeers(), getSessions()
+      const [u, b, bt, beers, sessions] = await Promise.all([
+        getAllProfiles(), getBreweries(), getBreweriesTable(), getBeers(), getSessions()
       ])
       setUsers(u)
       setBreweries(b)
+      setBreweriesTable(bt)
       setStats({ users: u.length, beers: beers.length, sessions: sessions.length })
     } finally { setLoading(false) }
   }
 
   useEffect(() => { load() }, [])
+
+  async function handleSaveBrewery(form) {
+    if (breweryModal?.brewery) {
+      await updateBrewery(breweryModal.brewery.id, form)
+    } else {
+      await createBrewery(form.naam, form.beschrijving)
+    }
+    setBreweryModal(null)
+    load()
+  }
+
+  async function handleDeleteBrewery(brewery) {
+    const usersInBrewery = users.filter(u => u.brewery_name === brewery.naam)
+    if (usersInBrewery.length > 0) {
+      if (!confirm(`Brouwerij "${brewery.naam}" verwijderen?\n\nLet op: ${usersInBrewery.length} gebruiker(s) zijn nog gekoppeld aan deze brouwerij.`)) return
+    } else {
+      if (!confirm(`Brouwerij "${brewery.naam}" verwijderen?`)) return
+    }
+    await deleteBrewery(brewery.id)
+    load()
+  }
 
   async function handleSave(userId, form) {
     await updateProfile(userId, {
@@ -253,12 +319,86 @@ export default function AdminPage() {
         ))}
       </div>
 
+      {/* Brouwerijen sectie — alleen superuser */}
+      {isSuperuser && (
+        <>
+          <div className="flex-between mt-3 mb-1">
+            <SectionTitle style={{ marginBottom: 0 }}>Brouwerijen ({breweriesTable.length})</SectionTitle>
+            <button className="btn btn-primary btn-sm" onClick={() => setBreweryModal({})}>
+              + Nieuwe brouwerij
+            </button>
+          </div>
+
+          {/* Desktop tabel */}
+          <div className="card desktop-only" style={{ padding: 0, overflow: 'hidden' }}>
+            <table className="table fluid-table">
+              <colgroup>
+                <col style={{ width: '35%' }} />
+                <col style={{ width: '40%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '15%' }} />
+              </colgroup>
+              <thead>
+                <tr><th>Naam</th><th>Beschrijving</th><th>Leden</th><th>Acties</th></tr>
+              </thead>
+              <tbody>
+                {breweriesTable.map(b => (
+                  <tr key={b.id}>
+                    <td><strong>{b.naam}</strong></td>
+                    <td className="text-muted">{b.beschrijving || '—'}</td>
+                    <td>{users.filter(u => u.brewery_name === b.naam).length}</td>
+                    <td>
+                      <div className="flex-gap">
+                        <button className="btn btn-ghost btn-sm"
+                          onClick={() => setBreweryModal({ brewery: b })}>✏️</button>
+                        <button className="btn btn-danger btn-sm"
+                          onClick={() => handleDeleteBrewery(b)}>🗑</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobiele kaarten */}
+          <div className="mobile-only">
+            {breweriesTable.map(b => (
+              <div key={b.id} className="admin-user-card">
+                <div className="admin-user-header">
+                  <div>
+                    <div className="admin-user-name">{b.naam}</div>
+                    {b.beschrijving && <div className="admin-user-brewery">{b.beschrijving}</div>}
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                      {users.filter(u => u.brewery_name === b.naam).length} leden
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-gap mt-1">
+                  <button className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center' }}
+                    onClick={() => setBreweryModal({ brewery: b })}>✏️ Bewerken</button>
+                  <button className="btn btn-danger btn-sm"
+                    onClick={() => handleDeleteBrewery(b)}>🗑</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
       <div className="alert alert-info mt-2" style={{ fontSize: '0.85rem', lineHeight: 1.6 }}>
         <div><strong>brouwer</strong> — bieren toevoegen en beoordelingen invullen</div>
         <div><strong>admin</strong> — ook proefsessies aanmaken en beheren</div>
         <div><strong>superuser</strong> — volledige toegang, altijd alles bewerken</div>
       </div>
 
+      {breweryModal !== null && (
+        <BreweryModal
+          brewery={breweryModal.brewery}
+          onSave={handleSaveBrewery}
+          onClose={() => setBreweryModal(null)}
+        />
+      )}
       {editModal && (
         <EditUserModal
           user={editModal}
