@@ -177,11 +177,16 @@ function EditUserModal({ user, breweries, onSave, onClose }) {
 
 
 // ── Brewery modal ──────────────────────────────────────────────
-function BreweryModal({ brewery, onSave, onClose }) {
+function BreweryModal({ brewery, users, breweries, onSave, onMoveUser, onClose }) {
   const [naam, setNaam] = useState(brewery?.naam || '')
   const [beschrijving, setBeschrijving] = useState(brewery?.beschrijving || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [moveTarget, setMoveTarget] = useState({}) // { userId: targetBrewery }
+  const [moveLoading, setMoveLoading] = useState({})
+
+  const members = brewery ? users.filter(u => u.brewery_name === brewery.naam) : []
+  const otherBreweries = breweries.filter(b => b !== brewery?.naam)
 
   async function handleSave(e) {
     e.preventDefault(); setError('')
@@ -192,26 +197,79 @@ function BreweryModal({ brewery, onSave, onClose }) {
     finally { setLoading(false) }
   }
 
+  async function handleMove(userId, username) {
+    const target = moveTarget[userId]
+    if (!target && target !== '') return
+    if (!confirm(`${username} verplaatsen naar "${target || 'geen brouwerij'}"?`)) return
+    setMoveLoading(p => ({ ...p, [userId]: true }))
+    try { await onMoveUser(userId, target || null) }
+    finally { setMoveLoading(p => ({ ...p, [userId]: false })) }
+  }
+
   return (
-    <Modal title={brewery ? `Brouwerij bewerken — ${brewery.naam}` : 'Nieuwe brouwerij'} onClose={onClose}>
+    <Modal title={brewery ? `Brouwerij — ${brewery.naam}` : 'Nieuwe brouwerij'} onClose={onClose} wide>
       {error && <Alert type="error">{error}</Alert>}
+
+      {/* Naam en beschrijving */}
       <form onSubmit={handleSave}>
-        <div className="form-group">
-          <label className="form-label">Naam <span className="req">*</span></label>
-          <input className="form-input" value={naam} onChange={e => setNaam(e.target.value)} autoFocus />
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">Naam <span className="req">*</span></label>
+            <input className="form-input" value={naam} onChange={e => setNaam(e.target.value)} autoFocus />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Beschrijving</label>
+            <input className="form-input" value={beschrijving} onChange={e => setBeschrijving(e.target.value)}
+              placeholder="Optioneel" />
+          </div>
         </div>
-        <div className="form-group">
-          <label className="form-label">Beschrijving</label>
-          <input className="form-input" value={beschrijving} onChange={e => setBeschrijving(e.target.value)}
-            placeholder="Optioneel" />
-        </div>
-        <div className="flex-gap mt-2">
+        <div className="flex-gap">
           <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? 'Opslaan...' : 'Opslaan'}
+            {loading ? 'Opslaan...' : 'Naam/beschrijving opslaan'}
           </button>
-          <button className="btn btn-ghost" type="button" onClick={onClose}>Annuleren</button>
         </div>
       </form>
+
+      {/* Leden */}
+      {brewery && (
+        <>
+          <hr className="divider" style={{ margin: '18px 0' }} />
+          <SectionTitle>Leden ({members.length})</SectionTitle>
+
+          {members.length === 0 ? (
+            <p className="text-muted" style={{ fontSize: '0.85rem' }}>Geen gebruikers gekoppeld aan deze brouwerij.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {members.map(u => (
+                <div key={u.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+                  padding: '10px 12px', background: 'var(--surface)',
+                  border: '1px solid var(--border-light)', borderRadius: 'var(--radius)'
+                }}>
+                  <div style={{ flex: 1, minWidth: 120 }}>
+                    <strong>{u.username}</strong>
+                    <span className="badge badge-muted" style={{ marginLeft: 8, fontSize: '0.7rem' }}>{u.role}</span>
+                    {u.email && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{u.email}</div>}
+                  </div>
+                  <select className="form-select" style={{ maxWidth: 200 }}
+                    value={moveTarget[u.id] ?? u.brewery_name ?? ''}
+                    onChange={e => setMoveTarget(p => ({ ...p, [u.id]: e.target.value }))}>
+                    <option value="">— geen brouwerij —</option>
+                    {breweries.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                  <button className="btn btn-secondary btn-sm"
+                    disabled={moveLoading[u.id] || (moveTarget[u.id] === undefined)}
+                    onClick={() => handleMove(u.id, u.username)}>
+                    {moveLoading[u.id] ? '...' : 'Verplaatsen'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      <button className="btn btn-ghost mt-2" type="button" onClick={onClose}>Sluiten</button>
     </Modal>
   )
 }
@@ -258,6 +316,13 @@ export default function AdminPage() {
     }
     setAddUserModal(false)
     setSuccess(`Gebruiker "${form.username}" aangemaakt.`)
+    load()
+    setTimeout(() => setSuccess(''), 3000)
+  }
+
+  async function handleMoveUser(userId, newBrewery) {
+    await updateProfile(userId, { brewery_name: newBrewery })
+    setSuccess('Gebruiker verplaatst.')
     load()
     setTimeout(() => setSuccess(''), 3000)
   }
@@ -515,7 +580,10 @@ export default function AdminPage() {
       {breweryModal !== null && (
         <BreweryModal
           brewery={breweryModal.brewery}
+          users={users}
+          breweries={breweries}
           onSave={handleSaveBrewery}
+          onMoveUser={handleMoveUser}
           onClose={() => setBreweryModal(null)}
         />
       )}
