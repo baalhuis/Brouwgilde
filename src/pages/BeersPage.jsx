@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useRole } from '../lib/AuthContext'
-import { getBeers, createBeer, updateBeer, deleteBeer, getAllProfiles } from '../lib/supabase'
+import { getBeers, createBeer, updateBeer, deleteBeer, getAllProfiles, getBreweries } from '../lib/supabase'
 import { Modal, Alert, EmptyState, Spinner, BKG_GROUPS, CATEGORIES, BIERTYPE_CATEGORIE } from '../components/UI'
 
 // ── Beer form modal ────────────────────────────────────────────
-function BeerModal({ beer, onSave, onClose, profiles }) {
+function BeerModal({ beer, onSave, onClose, profiles, breweryNames }) {
   const { profile } = useAuth()
   const { isSuperuser, isAdmin } = useRole()
   const [form, setForm] = useState(beer ? {
@@ -21,11 +21,21 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
     ownerId: profile?.id,
   })
 
-  // Als superuser een andere owner kiest: vul brouwerijnaam automatisch in
+  // Als admin/superuser een brouwerij kiest: vul brouwerijnaam en ownerId in
   function handleOwnerChange(userId) {
     const owner = profiles?.find(p => p.id === userId)
     set('ownerId', userId)
     if (owner?.brewery_name) set('brouwerij', owner.brewery_name)
+    else {
+      // Standalone brouwerij (geen user) — haal naam uit de option value via brouwerijnamen
+      // brouwerij naam staat al ingesteld via de option text, zoek op basis van ownerId
+      // Fallback: zoek de geselecteerde brouwerijnaam
+      const selectedOption = (breweryNames || []).find(bName => {
+        const p = profiles?.find(pr => pr.brewery_name === bName)
+        return p?.id === userId
+      })
+      if (selectedOption) set('brouwerij', selectedOption)
+    }
   }
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,7 +43,7 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
 
   async function handleSave(e) {
     e.preventDefault(); setError('')
-    const breweryOk = isAdmin ? !!form.ownerId : !!form.brouwerij
+    const breweryOk = !!form.brouwerij
     if (!form.naam || !form.biertype || !breweryOk || form.ebc === '' || form.ibu === '' || form.abv === '') {
       // categorie wordt automatisch ingevuld via biertype
       setError('Vul alle verplichte velden in.'); return
@@ -57,13 +67,23 @@ function BeerModal({ beer, onSave, onClose, profiles }) {
         {isAdmin && profiles?.length > 0 && (
           <div className="form-group">
             <label className="form-label">Brouwerij <span className="req">*</span></label>
-            <select className="form-select" value={form.ownerId || ''} onChange={e => handleOwnerChange(e.target.value)}>
+            <select className="form-select" value={form.brouwerij || ''}
+              onChange={e => {
+                const bName = e.target.value
+                set('brouwerij', bName)
+                // Zoek de eerste gebruiker van deze brouwerij als owner
+                const owner = profiles?.find(p => p.brewery_name === bName)
+                set('ownerId', owner?.id || profile?.id)
+              }}>
               <option value="">— selecteer brouwerij —</option>
-              {profiles.filter(p => p.brewery_name).map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.brewery_name} ({p.username})
-                </option>
-              ))}
+              {(breweryNames || []).map(bName => {
+                const owner = profiles?.find(p => p.brewery_name === bName)
+                return (
+                  <option key={bName} value={bName}>
+                    {bName}{owner ? ` (${owner.username})` : ''}
+                  </option>
+                )
+              })}
             </select>
           </div>
         )}
@@ -216,6 +236,7 @@ export default function BeersPage() {
   const { isSuperuser, isAdmin } = useRole()
   const [beers, setBeers] = useState([])
   const [profiles, setProfiles] = useState([])
+  const [breweryNames, setBreweryNames] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [modal, setModal] = useState(null)
@@ -225,12 +246,14 @@ export default function BeersPage() {
   async function load() {
     setLoading(true)
     try {
-      const [data, profileData] = await Promise.all([
+      const [data, profileData, bNames] = await Promise.all([
         getBeers(),
         isAdmin ? getAllProfiles() : Promise.resolve([]),
+        isAdmin ? getBreweries() : Promise.resolve([]),
       ])
       setBeers(data ?? [])
       setProfiles(profileData ?? [])
+      setBreweryNames(bNames ?? [])
     } catch (err) {
       console.error('Fout bij ophalen bieren:', err)
       setError('Kon bieren niet laden: ' + err.message)
@@ -381,7 +404,7 @@ export default function BeersPage() {
         </>
       )}
 
-      {modal && <BeerModal beer={modal.beer} onSave={handleSave} onClose={() => setModal(null)} profiles={profiles} />}
+      {modal && <BeerModal beer={modal.beer} onSave={handleSave} onClose={() => setModal(null)} profiles={profiles} breweryNames={breweryNames} />}
     </div>
   )
 }
