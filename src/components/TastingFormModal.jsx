@@ -3,67 +3,78 @@ import { Alert, SCORING, calcScore } from './UI'
 import { upsertForm, deleteForm } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-// Custom slider die werkt op iOS touch — luistert op document niveau
+// Custom slider — werkt op iOS touch via stabiele refs
 function TouchSlider({ value, onChange, disabled }) {
-  const trackRef = useRef(null)
-  const dragging = useRef(false)
-
-  function getVal(clientX) {
-    const rect = trackRef.current.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-    return Math.round(ratio * 9 + 1)
-  }
+  const trackRef   = useRef(null)
+  const dragging   = useRef(false)
+  // Gebruik een ref voor onChange zodat useEffect nooit opnieuw loopt
+  const onChangeRef = useRef(onChange)
+  useEffect(() => { onChangeRef.current = onChange })
 
   useEffect(() => {
-    if (disabled) return
     const track = trackRef.current
+    if (!track) return
+
+    function getVal(clientX) {
+      const rect = track.getBoundingClientRect()
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+      return Math.round(ratio * 9 + 1)
+    }
 
     function onTouchStart(e) {
+      if (disabled) return
       dragging.current = true
-      onChange(getVal(e.touches[0].clientX))
+      e.preventDefault()
+      onChangeRef.current(getVal(e.touches[0].clientX))
     }
 
     function onTouchMove(e) {
       if (!dragging.current) return
-      // Voorkom dat de modal of pagina scrollt
       e.preventDefault()
-      onChange(getVal(e.touches[0].clientX))
+      onChangeRef.current(getVal(e.touches[0].clientX))
     }
 
-    function onTouchEnd() { dragging.current = false }
+    function onTouchEnd() {
+      dragging.current = false
+    }
 
     function onMouseDown(e) {
+      if (disabled) return
       dragging.current = true
-      onChange(getVal(e.clientX))
+      onChangeRef.current(getVal(e.clientX))
     }
 
-    // Touch op de track zelf — passive: false zodat preventDefault werkt
+    function onMouseMove(e) {
+      if (!dragging.current) return
+      onChangeRef.current(getVal(e.clientX))
+    }
+
+    function onMouseUp() {
+      dragging.current = false
+    }
+
+    // passive: false op BEIDE start en move zodat preventDefault werkt op iOS
     track.addEventListener('touchstart', onTouchStart, { passive: false })
-
-    // Move op document zodat slepen buiten de track ook werkt
-    document.addEventListener('touchmove', onTouchMove, { passive: false })
-    document.addEventListener('touchend', onTouchEnd)
-    track.addEventListener('mousedown', onMouseDown)
-
-    function onMouseMove(e) { if (dragging.current) onChange(getVal(e.clientX)) }
-    function onMouseUp() { dragging.current = false }
+    track.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    track.addEventListener('touchend',   onTouchEnd,   { passive: true  })
+    track.addEventListener('mousedown',  onMouseDown)
     document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
+    document.addEventListener('mouseup',   onMouseUp)
 
     return () => {
       track.removeEventListener('touchstart', onTouchStart)
-      document.removeEventListener('touchmove', onTouchMove)
-      document.removeEventListener('touchend', onTouchEnd)
-      track.removeEventListener('mousedown', onMouseDown)
+      track.removeEventListener('touchmove',  onTouchMove)
+      track.removeEventListener('touchend',   onTouchEnd)
+      track.removeEventListener('mousedown',  onMouseDown)
       document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
+      document.removeEventListener('mouseup',   onMouseUp)
     }
-  }, [disabled, onChange])
+  }, []) // lege deps — loopt precies één keer
 
   const pct = `${(value - 1) / 9 * 100}%`
 
   return (
-    <div ref={trackRef} className="ts-track" style={{ userSelect: 'none' }}>
+    <div ref={trackRef} className="ts-track" style={{ userSelect: 'none', touchAction: 'none' }}>
       <div className="ts-fill" style={{ width: pct }} />
       <div className="ts-thumb" style={{ left: pct }} />
     </div>
