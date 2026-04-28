@@ -555,61 +555,47 @@ h1, h2, h3, h4 {
   font-weight: 600;
 }
 
-.score-slider-wrap {
+/* ── Touch Slider ─────────────────────────────────── */
+.ts-track {
   flex: 1;
+  position: relative;
+  height: 44px; /* grote touch target */
   display: flex;
   align-items: center;
-  /* Grote touch target — vinger kan overal op de rij landen */
-  padding: 8px 0;
-  touch-action: pan-x; /* iOS: alleen horizontaal scrollen toestaan = slider werkt */
-}
-
-.score-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(
-    to right,
-    var(--green) 0%,
-    var(--green) calc((var(--val, 5) - 1) / 9 * 100%),
-    var(--border-light) calc((var(--val, 5) - 1) / 9 * 100%),
-    var(--border-light) 100%
-  );
-  outline: none;
   cursor: pointer;
-  touch-action: pan-x;
 }
 
-/* Thumb — groot genoeg voor vinger */
-.score-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
+.ts-fill {
+  position: absolute;
+  left: 0;
+  height: 6px;
+  background: var(--green);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.ts-track::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+.ts-thumb {
+  position: absolute;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
   background: var(--green);
   border: 3px solid white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  cursor: grab;
-  touch-action: pan-x;
-}
-
-.score-slider::-moz-range-thumb {
-  width: 32px;
-  height: 32px;
   border-radius: 50%;
-  background: var(--green);
-  border: 3px solid white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  cursor: grab;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  transform: translateX(-50%);
+  pointer-events: none;
+  transition: transform 0.05s;
+  z-index: 2;
 }
-
-.score-slider:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.score-slider:disabled::-webkit-slider-thumb { cursor: not-allowed; }
 
 .score-val {
   width: 36px;
@@ -2105,5 +2091,59 @@ td.cell-truncate {
 
   .manage-beer-actions input {
     flex: 1;
+  }
+}
+
+/* ── TastingFormModal eigen overlay (geen scrollbare wrapper) ── */
+.tf-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,36,16,0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(3px);
+}
+
+.tf-modal {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: auto;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-lg);
+}
+
+.tf-info {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: var(--parchment);
+  border-radius: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tf-info-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+@media (max-width: 900px) {
+  .tf-overlay { padding: 10px; align-items: flex-end; }
+  .tf-modal {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-height: 88dvh;
+    padding: 18px 16px;
+    padding-bottom: max(18px, calc(12px + env(safe-area-inset-bottom)));
   }
 }
