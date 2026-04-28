@@ -798,14 +798,17 @@ h1, h2, h3, h4 {
 
   .mobile-topbar {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     position: fixed;
     top: 0; left: 0; right: 0;
-    height: 56px;
+    height: calc(56px + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
     background: var(--ink);
     border-bottom: 2px solid var(--green);
-    padding: 0 16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 8px;
     z-index: 200;
   }
 
@@ -884,7 +887,10 @@ h1, h2, h3, h4 {
 
   .main {
     margin-left: 0 !important;
-    padding: 76px 16px max(28px, calc(16px + env(safe-area-inset-bottom)));
+    padding-top: calc(76px + env(safe-area-inset-top));
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: max(28px, calc(16px + env(safe-area-inset-bottom)));
   }
 
   .page-header h2 { font-size: 1.6rem; }
