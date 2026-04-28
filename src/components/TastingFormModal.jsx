@@ -3,82 +3,141 @@ import { Alert, SCORING, calcScore } from './UI'
 import { upsertForm, deleteForm } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-// Custom slider — werkt op iOS touch via stabiele refs
+// TouchSlider — pure DOM implementatie buiten React's event systeem
+// React registreert events op root als passive:true, waardoor preventDefault niet werkt.
+// Door de slider als pure DOM te bouwen via useEffect omzeilen we dit volledig.
 function TouchSlider({ value, onChange, disabled }) {
-  const trackRef   = useRef(null)
-  const dragging   = useRef(false)
-  // Gebruik een ref voor onChange zodat useEffect nooit opnieuw loopt
-  const onChangeRef = useRef(onChange)
-  useEffect(() => { onChangeRef.current = onChange })
+  const containerRef = useRef(null)
+  const onChangeRef  = useRef(onChange)
+  const valueRef     = useRef(value)
 
+  // Houd refs synchroon met props
+  useEffect(() => { onChangeRef.current = onChange })
+  useEffect(() => { valueRef.current = value })
+
+  // Bouw de slider één keer als pure DOM — nooit opnieuw
   useEffect(() => {
-    const track = trackRef.current
-    if (!track) return
+    const container = containerRef.current
+    if (!container) return
+
+    // Maak DOM structuur
+    container.style.cssText = `
+      position: relative; height: 44px; border-radius: 22px;
+      background: #dde8c0; user-select: none; -webkit-user-select: none;
+      touch-action: none; cursor: pointer;
+    `
+
+    const fill = document.createElement('div')
+    fill.style.cssText = `
+      position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      height: 8px; background: #91B34D; border-radius: 4px; pointer-events: none;
+      transition: width 0.05s;
+    `
+
+    const thumb = document.createElement('div')
+    thumb.style.cssText = `
+      position: absolute; top: 50%; transform: translate(-50%, -50%);
+      width: 36px; height: 36px; background: #91B34D;
+      border: 3px solid white; border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3); pointer-events: none;
+      transition: left 0.05s;
+    `
+
+    container.appendChild(fill)
+    container.appendChild(thumb)
+
+    // Render huidige waarde
+    function render(v) {
+      const pct = ((v - 1) / 9 * 100) + '%'
+      fill.style.width = pct
+      thumb.style.left = pct
+    }
+    render(valueRef.current)
+
+    // Sla render op zodat React re-renders de DOM bijwerken
+    container._sliderRender = render
 
     function getVal(clientX) {
-      const rect = track.getBoundingClientRect()
+      const rect = container.getBoundingClientRect()
       const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
       return Math.round(ratio * 9 + 1)
     }
 
+    let dragging = false
+
     function onTouchStart(e) {
-      if (disabled) return
-      dragging.current = true
+      if (container._disabled) return
+      dragging = true
       e.preventDefault()
-      onChangeRef.current(getVal(e.touches[0].clientX))
+      e.stopPropagation()
+      const v = getVal(e.touches[0].clientX)
+      render(v)
+      onChangeRef.current(v)
     }
 
     function onTouchMove(e) {
-      if (!dragging.current) return
+      if (!dragging) return
       e.preventDefault()
-      onChangeRef.current(getVal(e.touches[0].clientX))
+      e.stopPropagation()
+      const v = getVal(e.touches[0].clientX)
+      render(v)
+      onChangeRef.current(v)
     }
 
-    function onTouchEnd() {
-      dragging.current = false
-    }
+    function onTouchEnd() { dragging = false }
 
     function onMouseDown(e) {
-      if (disabled) return
-      dragging.current = true
-      onChangeRef.current(getVal(e.clientX))
+      if (container._disabled) return
+      dragging = true
+      const v = getVal(e.clientX)
+      render(v)
+      onChangeRef.current(v)
     }
 
     function onMouseMove(e) {
-      if (!dragging.current) return
-      onChangeRef.current(getVal(e.clientX))
+      if (!dragging) return
+      const v = getVal(e.clientX)
+      render(v)
+      onChangeRef.current(v)
     }
 
-    function onMouseUp() {
-      dragging.current = false
-    }
+    function onMouseUp() { dragging = false }
 
-    // passive: false op BEIDE start en move zodat preventDefault werkt op iOS
-    track.addEventListener('touchstart', onTouchStart, { passive: false })
-    track.addEventListener('touchmove',  onTouchMove,  { passive: false })
-    track.addEventListener('touchend',   onTouchEnd,   { passive: true  })
-    track.addEventListener('mousedown',  onMouseDown)
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup',   onMouseUp)
+    // Registreer direct op DOM element — NIET via React — met passive:false
+    container.addEventListener('touchstart', onTouchStart, { passive: false })
+    container.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    container.addEventListener('touchend',   onTouchEnd,   { passive: true })
+    container.addEventListener('mousedown',  onMouseDown)
+    document.addEventListener('mousemove',   onMouseMove)
+    document.addEventListener('mouseup',     onMouseUp)
 
     return () => {
-      track.removeEventListener('touchstart', onTouchStart)
-      track.removeEventListener('touchmove',  onTouchMove)
-      track.removeEventListener('touchend',   onTouchEnd)
-      track.removeEventListener('mousedown',  onMouseDown)
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup',   onMouseUp)
+      container.removeEventListener('touchstart', onTouchStart)
+      container.removeEventListener('touchmove',  onTouchMove)
+      container.removeEventListener('touchend',   onTouchEnd)
+      container.removeEventListener('mousedown',  onMouseDown)
+      document.removeEventListener('mousemove',   onMouseMove)
+      document.removeEventListener('mouseup',     onMouseUp)
     }
-  }, []) // lege deps — loopt precies één keer
+  }, []) // éénmalig — slider leeft in pure DOM
 
-  const pct = `${(value - 1) / 9 * 100}%`
+  // Sync React state → DOM render zonder re-mount
+  useEffect(() => {
+    if (containerRef.current?._sliderRender) {
+      containerRef.current._sliderRender(value)
+    }
+  }, [value])
 
-  return (
-    <div ref={trackRef} className="ts-track" style={{ userSelect: 'none', touchAction: 'none' }}>
-      <div className="ts-fill" style={{ width: pct }} />
-      <div className="ts-thumb" style={{ left: pct }} />
-    </div>
-  )
+  // Sync disabled
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current._disabled = disabled
+      containerRef.current.style.opacity = disabled ? '0.5' : '1'
+      containerRef.current.style.cursor  = disabled ? 'not-allowed' : 'pointer'
+    }
+  }, [disabled])
+
+  return <div ref={containerRef} />
 }
 
 export default function TastingFormModal({ beer, session, existingForm, readOnly, onDone, onClose }) {
