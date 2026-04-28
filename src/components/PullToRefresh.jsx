@@ -99,11 +99,8 @@ export default function PullToRefresh({ onRefresh, children }) {
         </div>
       )}
 
-      {/* Content verschuift mee */}
-      <div style={{
-        transform: `translateY(${pullY}px)`,
-        transition: pulling.current ? 'none' : 'transform 0.3s ease',
-      }}>
+      {/* Content — geen transform zodat position:fixed children correct blijven */}
+      <div style={{ paddingTop: pullY, transition: pulling.current ? 'none' : 'padding-top 0.3s ease' }}>
         {children}
       </div>
     </div>
