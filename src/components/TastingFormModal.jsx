@@ -3,62 +3,20 @@ import { Alert, SCORING, calcScore } from './UI'
 import { upsertForm, deleteForm } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
 
-// TouchSlider — pure DOM implementatie buiten React's event systeem
-// React registreert events op root als passive:true, waardoor preventDefault niet werkt.
-// Door de slider als pure DOM te bouwen via useEffect omzeilen we dit volledig.
+// Custom slider — werkt op iOS touch via stabiele refs
 function TouchSlider({ value, onChange, disabled }) {
-  const containerRef = useRef(null)
-  const onChangeRef  = useRef(onChange)
-  const valueRef     = useRef(value)
-
-  // Houd refs synchroon met props
+  const trackRef    = useRef(null)
+  const onChangeRef = useRef(onChange)
+  const valueRef    = useRef(value)
   useEffect(() => { onChangeRef.current = onChange })
   useEffect(() => { valueRef.current = value })
 
-  // Bouw de slider één keer als pure DOM — nooit opnieuw
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    // Maak DOM structuur
-    container.style.cssText = `
-      position: relative; height: 44px; border-radius: 22px;
-      background: #dde8c0; user-select: none; -webkit-user-select: none;
-      touch-action: none; cursor: pointer;
-    `
-
-    const fill = document.createElement('div')
-    fill.style.cssText = `
-      position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-      height: 8px; background: #91B34D; border-radius: 4px; pointer-events: none;
-      transition: width 0.05s;
-    `
-
-    const thumb = document.createElement('div')
-    thumb.style.cssText = `
-      position: absolute; top: 50%; transform: translate(-50%, -50%);
-      width: 36px; height: 36px; background: #91B34D;
-      border: 3px solid white; border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3); pointer-events: none;
-      transition: left 0.05s;
-    `
-
-    container.appendChild(fill)
-    container.appendChild(thumb)
-
-    // Render huidige waarde
-    function render(v) {
-      const pct = ((v - 1) / 9 * 100) + '%'
-      fill.style.width = pct
-      thumb.style.left = pct
-    }
-    render(valueRef.current)
-
-    // Sla render op zodat React re-renders de DOM bijwerken
-    container._sliderRender = render
+    const track = trackRef.current
+    if (!track) return
 
     function getVal(clientX) {
-      const rect = container.getBoundingClientRect()
+      const rect = track.getBoundingClientRect()
       const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
       return Math.round(ratio * 9 + 1)
     }
@@ -66,78 +24,64 @@ function TouchSlider({ value, onChange, disabled }) {
     let dragging = false
 
     function onTouchStart(e) {
-      if (container._disabled) return
+      if (track._disabled) return
       dragging = true
       e.preventDefault()
-      e.stopPropagation()
-      const v = getVal(e.touches[0].clientX)
-      render(v)
-      onChangeRef.current(v)
+      onChangeRef.current(getVal(e.touches[0].clientX))
     }
 
     function onTouchMove(e) {
       if (!dragging) return
       e.preventDefault()
-      e.stopPropagation()
-      const v = getVal(e.touches[0].clientX)
-      render(v)
-      onChangeRef.current(v)
+      onChangeRef.current(getVal(e.touches[0].clientX))
     }
 
     function onTouchEnd() { dragging = false }
 
     function onMouseDown(e) {
-      if (container._disabled) return
+      if (track._disabled) return
       dragging = true
-      const v = getVal(e.clientX)
-      render(v)
-      onChangeRef.current(v)
+      onChangeRef.current(getVal(e.clientX))
     }
 
     function onMouseMove(e) {
       if (!dragging) return
-      const v = getVal(e.clientX)
-      render(v)
-      onChangeRef.current(v)
+      onChangeRef.current(getVal(e.clientX))
     }
 
     function onMouseUp() { dragging = false }
 
-    // Registreer direct op DOM element — NIET via React — met passive:false
-    container.addEventListener('touchstart', onTouchStart, { passive: false })
-    container.addEventListener('touchmove',  onTouchMove,  { passive: false })
-    container.addEventListener('touchend',   onTouchEnd,   { passive: true })
-    container.addEventListener('mousedown',  onMouseDown)
-    document.addEventListener('mousemove',   onMouseMove)
-    document.addEventListener('mouseup',     onMouseUp)
+    track.addEventListener('touchstart', onTouchStart, { passive: false })
+    track.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    track.addEventListener('touchend',   onTouchEnd,   { passive: true })
+    track.addEventListener('mousedown',  onMouseDown)
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup',   onMouseUp)
 
     return () => {
-      container.removeEventListener('touchstart', onTouchStart)
-      container.removeEventListener('touchmove',  onTouchMove)
-      container.removeEventListener('touchend',   onTouchEnd)
-      container.removeEventListener('mousedown',  onMouseDown)
-      document.removeEventListener('mousemove',   onMouseMove)
-      document.removeEventListener('mouseup',     onMouseUp)
+      track.removeEventListener('touchstart', onTouchStart)
+      track.removeEventListener('touchmove',  onTouchMove)
+      track.removeEventListener('touchend',   onTouchEnd)
+      track.removeEventListener('mousedown',  onMouseDown)
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup',   onMouseUp)
     }
-  }, []) // éénmalig — slider leeft in pure DOM
+  }, [])
 
-  // Sync React state → DOM render zonder re-mount
   useEffect(() => {
-    if (containerRef.current?._sliderRender) {
-      containerRef.current._sliderRender(value)
-    }
-  }, [value])
-
-  // Sync disabled
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current._disabled = disabled
-      containerRef.current.style.opacity = disabled ? '0.5' : '1'
-      containerRef.current.style.cursor  = disabled ? 'not-allowed' : 'pointer'
+    if (trackRef.current) {
+      trackRef.current._disabled = disabled
     }
   }, [disabled])
 
-  return <div ref={containerRef} />
+  const pct = `${(value - 1) / 9 * 100}%`
+
+  return (
+    <div ref={trackRef} className="ts-track" style={{ userSelect: 'none', touchAction: 'none' }}>
+      <div className="ts-fill" style={{ width: pct }} />
+      <div className="ts-thumb" style={{ left: pct }} />
+    </div>
+  )
 }
 
 export default function TastingFormModal({ beer, session, existingForm, readOnly, onDone, onClose }) {
