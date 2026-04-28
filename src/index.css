@@ -426,8 +426,12 @@ h1, h2, h3, h4 {
   width: 100%;
   max-height: 92vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-lg);
+  /* iOS: geen momentum scroll die slider-touches onderschept */
+  -webkit-overflow-scrolling: auto;
 }
 
 .modal-header {
@@ -551,52 +555,61 @@ h1, h2, h3, h4 {
   font-weight: 600;
 }
 
-.score-slider {
-  flex: 1;
-  accent-color: var(--green);
-  cursor: pointer;
-  height: 5px;
-}
-
-/* ── Custom touch-friendly slider ─────────────────── */
 .score-slider-wrap {
   flex: 1;
-  padding: 12px 0; /* grote touch target */
-  position: relative;
+  display: flex;
+  align-items: center;
+  /* Grote touch target — vinger kan overal op de rij landen */
+  padding: 8px 0;
+  touch-action: pan-x; /* iOS: alleen horizontaal scrollen toestaan = slider werkt */
 }
 
-.score-track {
-  position: relative;
+.score-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
   height: 6px;
-  background: var(--border-light);
   border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--green) 0%,
+    var(--green) calc((var(--val, 5) - 1) / 9 * 100%),
+    var(--border-light) calc((var(--val, 5) - 1) / 9 * 100%),
+    var(--border-light) 100%
+  );
+  outline: none;
+  cursor: pointer;
+  touch-action: pan-x;
 }
 
-.score-fill {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  background: var(--green);
-  border-radius: 3px;
-  pointer-events: none;
-}
-
-.score-thumb {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 28px;
-  height: 28px;
+/* Thumb — groot genoeg voor vinger */
+.score-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   background: var(--green);
   border: 3px solid white;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  pointer-events: none;
-  transition: transform 0.08s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  cursor: grab;
+  touch-action: pan-x;
 }
 
-.score-slider-wrap:active .score-thumb {
-  transform: translate(-50%, -50%) scale(1.2);
+.score-slider::-moz-range-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  cursor: grab;
 }
+
+.score-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.score-slider:disabled::-webkit-slider-thumb { cursor: not-allowed; }
 
 .score-val {
   width: 36px;

@@ -51,59 +51,29 @@ export default function TastingFormModal({ beer, session, existingForm, readOnly
   }
 
   function ScoreSlider({ field, label }) {
-    const trackRef = useRef(null)
+    const wrapRef = useRef(null)
 
-    function calcVal(clientX) {
-      const rect = trackRef.current.getBoundingClientRect()
-      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-      return Math.round(ratio * 9 + 1)
-    }
-
+    // Stop modal scroll wanneer vinger op slider staat
     useEffect(() => {
-      if (!canEdit || !trackRef.current) return
-      const el = trackRef.current
-
-      function onTouchStart(e) {
-        e.preventDefault()
-        e.stopPropagation()
-        set(field, calcVal(e.touches[0].clientX))
-      }
-      function onTouchMove(e) {
-        e.preventDefault()
-        e.stopPropagation()
-        set(field, calcVal(e.touches[0].clientX))
-      }
-      function onMouseDown(e) {
-        set(field, calcVal(e.clientX))
-        function onMouseMove(e) { set(field, calcVal(e.clientX)) }
-        function onMouseUp() {
-          window.removeEventListener('mousemove', onMouseMove)
-          window.removeEventListener('mouseup', onMouseUp)
-        }
-        window.addEventListener('mousemove', onMouseMove)
-        window.addEventListener('mouseup', onMouseUp)
-      }
-
-      el.addEventListener('touchstart', onTouchStart, { passive: false })
-      el.addEventListener('touchmove',  onTouchMove,  { passive: false })
-      el.addEventListener('mousedown',  onMouseDown)
+      const el = wrapRef.current
+      if (!el) return
+      const stop = e => e.stopPropagation()
+      el.addEventListener('touchstart', stop, { passive: true })
+      el.addEventListener('touchmove',  stop, { passive: true })
       return () => {
-        el.removeEventListener('touchstart', onTouchStart)
-        el.removeEventListener('touchmove',  onTouchMove)
-        el.removeEventListener('mousedown',  onMouseDown)
+        el.removeEventListener('touchstart', stop)
+        el.removeEventListener('touchmove',  stop)
       }
-    }, [canEdit, field])
+    }, [])
 
     return (
       <div className="score-row">
         <span className="score-label">{label}</span>
         <span className="score-weight">×{SCORING[field]}</span>
-        <div ref={trackRef} className="score-slider-wrap"
-          style={{ flex: 1, touchAction: 'none', cursor: canEdit ? 'pointer' : 'default' }}>
-          <div className="score-track">
-            <div className="score-fill" style={{ width: `${(form[field] - 1) / 9 * 100}%` }} />
-            <div className="score-thumb" style={{ left: `${(form[field] - 1) / 9 * 100}%` }} />
-          </div>
+        <div ref={wrapRef} className="score-slider-wrap" style={{ flex: 1 }}>
+          <input className="score-slider" type="range" min="1" max="10" step="1"
+            value={form[field]} disabled={!canEdit}
+            onChange={e => set(field, parseInt(e.target.value))} />
         </div>
         <span className="score-val">{form[field]}</span>
       </div>
