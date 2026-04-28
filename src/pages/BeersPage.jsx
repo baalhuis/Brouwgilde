@@ -43,10 +43,16 @@ function BeerModal({ beer, onSave, onClose, profiles, breweryNames }) {
 
   async function handleSave(e) {
     e.preventDefault(); setError('')
-    const breweryOk = !!form.brouwerij
-    if (!form.naam || !form.biertype || !breweryOk || form.ebc === '' || form.ibu === '' || form.abv === '') {
-      // categorie wordt automatisch ingevuld via biertype
-      setError('Vul alle verplichte velden in.'); return
+    const breweryOk = isAdmin ? !!form.brouwerij : !!form.brouwerij
+    const missing = []
+    if (!form.naam)       missing.push('Naam bier')
+    if (!form.biertype)   missing.push('Biertype')
+    if (!breweryOk)       missing.push('Brouwerij')
+    if (form.ebc === '')  missing.push('EBC')
+    if (form.ibu === '')  missing.push('IBU')
+    if (form.abv === '')  missing.push('ABV%')
+    if (missing.length > 0) {
+      setError(`Vul alle verplichte velden in: ${missing.join(', ')}.`); return
     }
     setLoading(true)
     try { await onSave(form) }
