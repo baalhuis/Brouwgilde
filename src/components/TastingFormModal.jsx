@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Modal, Alert, SCORING, calcScore } from './UI'
 import { upsertForm, deleteForm } from '../lib/supabase'
 import { useAuth } from '../lib/AuthContext'
@@ -51,24 +51,55 @@ export default function TastingFormModal({ beer, session, existingForm, readOnly
   }
 
   function ScoreSlider({ field, label }) {
-    function handleTrackInteraction(e, el) {
-      const rect = el.getBoundingClientRect()
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX
+    const trackRef = useRef(null)
+
+    function calcVal(clientX) {
+      const rect = trackRef.current.getBoundingClientRect()
       const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
-      const val = Math.round(ratio * 9 + 1) // 1-10
-      set(field, val)
+      return Math.round(ratio * 9 + 1)
     }
+
+    useEffect(() => {
+      if (!canEdit || !trackRef.current) return
+      const el = trackRef.current
+
+      function onTouchStart(e) {
+        e.preventDefault()
+        e.stopPropagation()
+        set(field, calcVal(e.touches[0].clientX))
+      }
+      function onTouchMove(e) {
+        e.preventDefault()
+        e.stopPropagation()
+        set(field, calcVal(e.touches[0].clientX))
+      }
+      function onMouseDown(e) {
+        set(field, calcVal(e.clientX))
+        function onMouseMove(e) { set(field, calcVal(e.clientX)) }
+        function onMouseUp() {
+          window.removeEventListener('mousemove', onMouseMove)
+          window.removeEventListener('mouseup', onMouseUp)
+        }
+        window.addEventListener('mousemove', onMouseMove)
+        window.addEventListener('mouseup', onMouseUp)
+      }
+
+      el.addEventListener('touchstart', onTouchStart, { passive: false })
+      el.addEventListener('touchmove',  onTouchMove,  { passive: false })
+      el.addEventListener('mousedown',  onMouseDown)
+      return () => {
+        el.removeEventListener('touchstart', onTouchStart)
+        el.removeEventListener('touchmove',  onTouchMove)
+        el.removeEventListener('mousedown',  onMouseDown)
+      }
+    }, [canEdit, field])
 
     return (
       <div className="score-row">
         <span className="score-label">{label}</span>
         <span className="score-weight">×{SCORING[field]}</span>
-        <div className="score-slider-wrap"
-          style={{ flex: 1, touchAction: 'none', cursor: canEdit ? 'pointer' : 'default' }}
-          onMouseDown={canEdit ? e => { handleTrackInteraction(e, e.currentTarget); const move = ev => handleTrackInteraction(ev, e.currentTarget); const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }; window.addEventListener('mousemove', move); window.addEventListener('mouseup', up) } : undefined}
-          onTouchStart={canEdit ? e => { e.preventDefault(); handleTrackInteraction(e, e.currentTarget) } : undefined}
-          onTouchMove={canEdit ? e => { e.preventDefault(); handleTrackInteraction(e, e.currentTarget) } : undefined}
-        >
+        <div ref={trackRef} className="score-slider-wrap"
+          style={{ flex: 1, touchAction: 'none', cursor: canEdit ? 'pointer' : 'default' }}>
           <div className="score-track">
             <div className="score-fill" style={{ width: `${(form[field] - 1) / 9 * 100}%` }} />
             <div className="score-thumb" style={{ left: `${(form[field] - 1) / 9 * 100}%` }} />
