@@ -51,13 +51,29 @@ export default function TastingFormModal({ beer, session, existingForm, readOnly
   }
 
   function ScoreSlider({ field, label }) {
+    function handleTrackInteraction(e, el) {
+      const rect = el.getBoundingClientRect()
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+      const val = Math.round(ratio * 9 + 1) // 1-10
+      set(field, val)
+    }
+
     return (
       <div className="score-row">
         <span className="score-label">{label}</span>
         <span className="score-weight">×{SCORING[field]}</span>
-        <input className="score-slider" type="range" min="1" max="10" step="1"
-          value={form[field]} disabled={!canEdit}
-          onChange={e => set(field, parseInt(e.target.value))} />
+        <div className="score-slider-wrap"
+          style={{ flex: 1, touchAction: 'none', cursor: canEdit ? 'pointer' : 'default' }}
+          onMouseDown={canEdit ? e => { handleTrackInteraction(e, e.currentTarget); const move = ev => handleTrackInteraction(ev, e.currentTarget); const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }; window.addEventListener('mousemove', move); window.addEventListener('mouseup', up) } : undefined}
+          onTouchStart={canEdit ? e => { e.preventDefault(); handleTrackInteraction(e, e.currentTarget) } : undefined}
+          onTouchMove={canEdit ? e => { e.preventDefault(); handleTrackInteraction(e, e.currentTarget) } : undefined}
+        >
+          <div className="score-track">
+            <div className="score-fill" style={{ width: `${(form[field] - 1) / 9 * 100}%` }} />
+            <div className="score-thumb" style={{ left: `${(form[field] - 1) / 9 * 100}%` }} />
+          </div>
+        </div>
         <span className="score-val">{form[field]}</span>
       </div>
     )

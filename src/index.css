@@ -558,6 +558,46 @@ h1, h2, h3, h4 {
   height: 5px;
 }
 
+/* ── Custom touch-friendly slider ─────────────────── */
+.score-slider-wrap {
+  flex: 1;
+  padding: 12px 0; /* grote touch target */
+  position: relative;
+}
+
+.score-track {
+  position: relative;
+  height: 6px;
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+.score-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: var(--green);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.score-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  background: var(--green);
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  pointer-events: none;
+  transition: transform 0.08s;
+}
+
+.score-slider-wrap:active .score-thumb {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
 .score-val {
   width: 36px;
   text-align: center;
