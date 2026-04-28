@@ -15,7 +15,7 @@ function BeerModal({ beer, onSave, onClose, profiles, breweryNames }) {
     untappd_url: beer.untappd_url || '', brewfather_url: beer.brewfather_url || '',
     ownerId: beer.owner_id || profile?.id,
   } : {
-    naam: '', categorie: 'A', biertype: profile?.brewery_name || '',
+    naam: '', categorie: 'A', biertype: '',
     brouwerij: profile?.brewery_name || '',
     beschrijving: '', ebc: '', ibu: '', abv: '', untappd_url: '', brewfather_url: '',
     ownerId: profile?.id,
