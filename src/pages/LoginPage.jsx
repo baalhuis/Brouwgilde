@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { signIn, signUp, getBreweries } from '../lib/supabase'
+import { signIn, signUp, getBreweries, resolveBreweryName } from '../lib/supabase'
 import { Alert } from '../components/UI'
 import { LogoGreen, HopsDecoration } from '../components/Logo'
 
@@ -37,7 +37,7 @@ export default function LoginPage() {
   async function handleRegister(e) {
     e.preventDefault(); setError(''); setLoading(true)
     const { email, password, username, breweryName, selectedBrewery } = regForm
-    const finalBrewery = breweryMode === 'existing' ? selectedBrewery : breweryName
+    let finalBrewery = breweryMode === 'existing' ? selectedBrewery : breweryName
 
     if (!email || !password || !username) {
       setError('E-mail, wachtwoord en gebruikersnaam zijn verplicht.'); setLoading(false); return
@@ -49,6 +49,8 @@ export default function LoginPage() {
       setError('Wachtwoord moet minimaal 6 tekens zijn.'); setLoading(false); return
     }
     try {
+      // Normaliseer brouwerijnaam — als de naam al bestaat (case-insensitief) gebruik de canonical naam
+      finalBrewery = await resolveBreweryName(finalBrewery)
       await signUp(email, password, username, finalBrewery)
       setInfo('Registratie gelukt! Je kunt nu direct inloggen.')
       setTab('login')

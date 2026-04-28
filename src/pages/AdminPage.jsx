@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth, useRole } from '../lib/AuthContext'
-import { getAllProfiles, updateProfile, deleteProfile, getBreweries, getBreweriesTable, createBrewery, updateBrewery, deleteBrewery, getBeers, getSessions, signUp } from '../lib/supabase'
+import { getAllProfiles, updateProfile, deleteProfile, getBreweries, getBreweriesTable, createBrewery, updateBrewery, deleteBrewery, getBeers, getSessions, signUp, resolveBreweryName } from '../lib/supabase'
 import { Spinner, Alert, SectionTitle, Modal } from '../components/UI'
 
 // ── Add user modal ─────────────────────────────────────────────
@@ -305,7 +305,9 @@ export default function AdminPage() {
   useEffect(() => { load() }, [])
 
   async function handleAddUser(form) {
-    await signUp(form.email, form.password, form.username, form.brewery_name || null)
+    // Normaliseer brouwerijnaam
+    const brewery = form.brewery_name ? await resolveBreweryName(form.brewery_name) : null
+    await signUp(form.email, form.password, form.username, brewery)
     // Update role if not default brouwer
     if (form.role !== 'brouwer') {
       // Find the new profile and update role

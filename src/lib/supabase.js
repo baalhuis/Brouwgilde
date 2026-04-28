@@ -122,15 +122,29 @@ export async function deleteBrewery(id) {
 }
 
 export async function getBreweries() {
-  // Haal namen op uit zowel profiles als de breweries tabel (zodat standalone brouwerijen ook zichtbaar zijn)
   const [profilesRes, breweriesRes] = await Promise.all([
     supabase.from('profiles').select('brewery_name').not('brewery_name', 'is', null),
     supabase.from('breweries').select('naam')
   ])
-  const fromProfiles = (profilesRes.data || []).map(p => p.brewery_name).filter(Boolean)
   const fromTable = (breweriesRes.data || []).map(b => b.naam).filter(Boolean)
-  const unique = [...new Set([...fromTable, ...fromProfiles])].sort()
-  return unique
+  const fromProfiles = (profilesRes.data || []).map(p => p.brewery_name).filter(Boolean)
+
+  // Case-insensitive deduplicatie — voorkeur voor naam uit breweries tabel
+  const seen = new Map() // lowercase → canonical naam
+  for (const naam of fromTable) seen.set(naam.toLowerCase().trim(), naam)
+  for (const naam of fromProfiles) {
+    const key = naam.toLowerCase().trim()
+    if (!seen.has(key)) seen.set(key, naam)
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b, 'nl'))
+}
+
+// Zoek de canonical brouwerijnaam (case-insensitive match)
+export async function resolveBreweryName(inputNaam) {
+  if (!inputNaam) return inputNaam
+  const breweries = await getBreweries()
+  const match = breweries.find(b => b.toLowerCase().trim() === inputNaam.toLowerCase().trim())
+  return match || inputNaam // return canonical naam of origineel als geen match
 }
 
 // ── BEERS ─────────────────────────────────────────────────────
