@@ -20,6 +20,12 @@ export async function signUp(email, password, username, breweryName) {
     }
   })
   if (error) throw error
+  // Voeg brouwerij toe aan breweries tabel als die nog niet bestaat
+  if (breweryName) {
+    await supabase
+      .from('breweries')
+      .upsert({ naam: breweryName }, { onConflict: 'naam', ignoreDuplicates: true })
+  }
   return data
 }
 
