@@ -880,6 +880,7 @@ h1, h2, h3, h4 {
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 6px 0 30px rgba(0,0,0,0.5);
+    padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
 
