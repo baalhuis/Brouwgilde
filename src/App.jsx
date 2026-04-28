@@ -5,6 +5,7 @@ import { signOut } from './lib/supabase'
 import { Spinner } from './components/UI'
 import { LogoWhite, HopsDecoration } from './components/Logo'
 import LoginPage from './pages/LoginPage'
+import PullToRefresh from './components/PullToRefresh'
 import Dashboard from './pages/Dashboard'
 import BeersPage from './pages/BeersPage'
 import SessionsPage from './pages/SessionsPage'
@@ -165,7 +166,11 @@ function AppShell() {
         {menuOpen && <div className="mobile-overlay" onClick={() => setMenuOpen(false)} />}
         <aside className={`sidebar sidebar-mobile ${menuOpen ? 'open' : ''}`}>{sidebarContent}</aside>
 
-        <main className="main">{renderPage()}</main>
+        <main className="main">
+          <PullToRefresh onRefresh={() => new Promise(r => { window.location.reload(); setTimeout(r, 500) })}>
+            {renderPage()}
+          </PullToRefresh>
+        </main>
       </div>
     </NavContext.Provider>
   )
