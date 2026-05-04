@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import { AuthProvider, useAuth, useRole } from './lib/AuthContext'
 import { NavContext } from './lib/NavContext'
 import { signOut } from './lib/supabase'
@@ -180,6 +181,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppShell />
+      <Analytics />
     </AuthProvider>
   )
 }
